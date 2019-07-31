@@ -1,6 +1,6 @@
 import * as AWS from 'aws-sdk';
+import { fetchMainApi } from '../controllers/utils';
 import { Configs, DeliveryReports, Stats } from '../models';
-import { fetchMainApi } from '../utils';
 
 export const getApi = async (type: string): Promise<any> => {
   const config = await Configs.getConfigs();

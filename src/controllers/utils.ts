@@ -58,6 +58,15 @@ export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) 
   );
 };
 
+/**
+ * Send request to main api
+ */
+export const fetchMainApi = async ({ path, method, body, params }: IRequestParams) => {
+  const { MAIN_API_DOMAIN } = process.env;
+
+  return sendRequest({ url: `${MAIN_API_DOMAIN}${path}`, method, body, params });
+};
+
 interface IRequestParams {
   url?: string;
   path?: string;
