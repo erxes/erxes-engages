@@ -68,9 +68,11 @@ connect().then(async () => {
       if (e.message === 'The security token included in the request is invalid') {
         return;
       }
+
+      console.log(e);
     }
 
-    await Stats.update({ _id: engageMessageId }, { $inc: { total: 1 } });
+    await Stats.updateOne({ _id: engageMessageId }, { $inc: { total: 1 } });
   }
 
   mongoose.connection.close();
