@@ -7,7 +7,7 @@ export const reportsList = async (req, res) => {
 
   const { engageMessageId } = req.params;
 
-  return DeliveryReports.findById(engageMessageId)
+  return DeliveryReports.findOne({ engageMessageId })
     .then(handeResultNotFoundWithEmptyObject(req, res))
     .then(respondWithResult(req, res))
     .catch(handleError(req, res));
@@ -16,7 +16,7 @@ export const reportsList = async (req, res) => {
 export const statsList = async (req, res) => {
   debugRequest(debugEngages, req);
 
-  return Stats.findById(req.params.engageMessageId)
+  return Stats.findOne({ engageMessageId: req.params.engageMessageId })
     .then(handeResultNotFoundWithEmptyObject(req, res))
     .then(respondWithResult(req, res))
     .catch(handleError(req, res));
