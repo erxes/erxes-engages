@@ -2,7 +2,6 @@ import * as AWS from 'aws-sdk';
 import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import Configs, { configIdByDefault } from '../models/Configs';
-import { getApi } from '../trackers/engageTracker';
 import { debugBase, debugExternalRequests } from './debuggers';
 
 export const createTransporter = async () => {
@@ -21,21 +20,6 @@ export const createTransporter = async () => {
   return nodemailer.createTransport({
     SES: new AWS.SES({ apiVersion: '2010-12-01' }),
   });
-};
-
-export const checkIfUserEmailVerifiedOnAmazon = async _email => {
-  return getApi('ses').then(api =>
-    api.verifyEmailIdentity(
-      {
-        EmailAddress: 'khangarid.b@nmma.co',
-      },
-      err => {
-        if (err) {
-          throw new Error(err);
-        }
-      },
-    ),
-  );
 };
 
 export interface ICustomer {
