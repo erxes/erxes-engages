@@ -1,6 +1,6 @@
 import * as Random from 'meteor-random';
 import * as mongoose from 'mongoose';
-import { Stats } from '../models';
+import { Configs, Stats } from '../models';
 import { createTransporter, getEnv, replaceKeys } from '../utils';
 import { connect } from './utils';
 
@@ -48,7 +48,8 @@ connect().then(async () => {
     let replacedContent = replaceKeys({ content, customer, user });
 
     const MAIN_API_DOMAIN = getEnv({ name: 'MAIN_API_DOMAIN' });
-    const AWS_CONFIG_SET = getEnv({ name: 'AWS_CONFIG_SET' });
+    const configSetDb = await Configs.findOne({ code: 'configSet' });
+    const configSet = configSetDb.value;
 
     const unSubscribeUrl = `${MAIN_API_DOMAIN}/unsubscribe/?cid=${customer._id}`;
 
@@ -62,7 +63,7 @@ connect().then(async () => {
         attachments: mailAttachment,
         html: replacedContent,
         headers: {
-          'X-SES-CONFIGURATION-SET': AWS_CONFIG_SET,
+          'X-SES-CONFIGURATION-SET': configSet,
           EngageMessageId: engageMessageId,
           CustomerId: customer._id,
           MailMessageId: mailMessageId,
