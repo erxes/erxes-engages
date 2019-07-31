@@ -41,7 +41,7 @@ app.post('/send', async (req: any, res) => {
     engageMessageId,
   };
 
-  await Stats.create({ _id: engageMessageId });
+  await Stats.create({ engageMessageId });
 
   await createWorkers(workerPath, workerData, results);
 

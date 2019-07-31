@@ -15,7 +15,7 @@ export interface IStats {
 export interface IStatsDocument extends IStats, Document {}
 
 export const statsSchema = new Schema({
-  _id: { type: String },
+  engageMessageId: { type: String },
   open: { type: Number, default: 0 },
   click: { type: Number, default: 0 },
   complaint: { type: Number, default: 0 },
@@ -31,12 +31,13 @@ export interface IDeliveryReports {
   engageMessageId: string;
   mailId: string;
   status: string;
+  customerId: string;
 }
 
 export interface IDeliveryReportsDocument extends IDeliveryReports, Document {}
 
 export const deliveryReportsSchema = new Schema({
-  _id: { type: String },
+  customerId: { type: String },
   mailId: { type: String, optional: true },
   status: { type: String, optional: true },
   engageMessageId: { type: String, optional: true },
@@ -52,7 +53,7 @@ export const loadStatsClass = () => {
      * Increase stat by 1
      */
     public static async updateStats(engageMessageId: string, stat: string) {
-      return Stats.updateOne({ _id: engageMessageId }, { $inc: { [stat]: 1 } });
+      return Stats.updateOne({ engageMessageId }, { $inc: { [stat]: 1 } });
     }
   }
 
@@ -78,12 +79,12 @@ export const loadDeliveryReportsClass = () => {
     public static async updateOrCreateReport(headers: any, status: string) {
       const { engageMessageId, mailId, customerId } = headers;
 
-      const deliveryReports = await DeliveryReports.findOne({ _id: customerId });
+      const deliveryReports = await DeliveryReports.findOne({ customerId });
 
       if (deliveryReports) {
-        await DeliveryReports.update({ _id: customerId }, { $set: { engageMessageId, mailId, status } });
+        await DeliveryReports.update({ customerId }, { $set: { engageMessageId, mailId, status } });
       } else {
-        await DeliveryReports.create({ _id: customerId, mailId, engageMessageId, status });
+        await DeliveryReports.create({ customerId, mailId, engageMessageId, status });
       }
 
       if (status === 'complaint' || status === 'bounce' || status === 'reject') {

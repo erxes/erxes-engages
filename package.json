@@ -9,6 +9,7 @@
     "dev-workers": "PROCESS_NAME=workers DEBUG=erxes-engages-worker:* NODE_ENV=development node_modules/.bin/ts-node-dev --experimental-worker --respawn src/workers",
     "build": "tsc -p tsconfig.prod.json",
     "engageSubscriptions": "ts-node ./src/commands/engageSubscriptions.ts",
+    "setConfigSet": "ts-node ./src/commands/setAwsConfigSet.ts",
     "precommit": "lint-staged"
   },
   "lint-staged": {

@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
 import * as mongoose from 'mongoose';
+import { Configs } from '../models';
 import { getApi } from '../trackers/engageTracker';
 import { getEnv } from '../utils';
 
@@ -9,18 +10,19 @@ const start = () => {
 
   const MONGO_URL = getEnv({ name: 'MONGO_URL' });
   const DOMAIN = getEnv({ name: 'DOMAIN' });
-  const AWS_CONFIG_SET = getEnv({ name: 'AWS_CONFIG_SET' });
 
   let topicArn = '';
 
   mongoose.connect(MONGO_URL, { useNewUrlParser: true, useCreateIndex: true }, async () => {
     const snsApi = await getApi('sns');
     const sesApi = await getApi('ses');
+    const configSetDb = await Configs.findOne({ code: 'configSet' });
+    const configSet = configSetDb.value;
 
     // Automatically creating aws configs
     snsApi
       // Create Topic
-      .createTopic({ Name: AWS_CONFIG_SET })
+      .createTopic({ Name: configSet })
       .promise()
       // Subscribing to the topic
       .then(result => {
@@ -41,7 +43,7 @@ const start = () => {
         return sesApi
           .createConfigurationSet({
             ConfigurationSet: {
-              Name: AWS_CONFIG_SET,
+              Name: configSet,
             },
           })
           .promise();
@@ -55,7 +57,7 @@ const start = () => {
 
         return sesApi
           .createConfigurationSetEventDestination({
-            ConfigurationSetName: AWS_CONFIG_SET,
+            ConfigurationSetName: configSet,
             EventDestination: {
               MatchingEventTypes: [
                 'send',
@@ -67,7 +69,7 @@ const start = () => {
                 'click',
                 'renderingFailure',
               ],
-              Name: AWS_CONFIG_SET,
+              Name: configSet,
               Enabled: true,
               SNSDestination: {
                 TopicARN: topicArn,

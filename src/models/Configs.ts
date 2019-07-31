@@ -1,43 +1,47 @@
 import { Document, Model, model, Schema } from 'mongoose';
 
 export interface IConfig {
-  accessKeyId: string;
-  secretAccessKey: string;
-  region: string;
+  code: string;
+  value: string;
 }
 
 export interface IConfigDocument extends IConfig, Document {}
 
 export const configsSchema = new Schema({
-  _id: { type: String },
-  accessKeyId: { type: String },
-  secretAccessKey: { type: String },
-  region: { type: String },
+  code: { type: String },
+  value: { type: String },
 });
 
 export interface IConfigModel extends Model<IConfigDocument> {
   updateConfig(doc: IConfig): Promise<IConfigDocument>;
+  getConfigs(): Promise<{ accessKeyId: string; secretAccessKey: string; region: string }>;
 }
-
-export const configIdByDefault = 'config';
 
 export const loadClass = () => {
   class Config {
     /**
      * Updates config
      */
-    public static async updateConfig(doc: IConfig) {
-      const config = await Configs.findOne({ _id: configIdByDefault });
+    public static async updateConfig(doc: { accessKeyId: string; secretAccessKey: string; region: string }) {
+      const options = { upsert: true, new: true, setDefaultsOnInsert: true };
 
-      if (!config) {
-        return Configs.create({ ...doc, _id: configIdByDefault });
-      }
+      await Configs.updateOne({ code: 'accessKeyId' }, { $set: { value: doc.accessKeyId } }, options);
+      await Configs.updateOne({ code: 'secretAccessKey' }, { $set: { value: doc.secretAccessKey } }, options);
+      await Configs.updateOne({ code: 'region' }, { $set: { value: doc.region } }, options);
 
-      if (config) {
-        await Configs.updateOne({ _id: configIdByDefault }, { $set: { ...doc } });
+      return this.getConfigs();
+    }
 
-        return Configs.findOne({ _id: configIdByDefault });
-      }
+    public static async getConfigs() {
+      const accessKeyId = await Configs.findOne({ code: 'accessKeyId' });
+      const secretAccessKey = await Configs.findOne({ code: 'secretAccessKey' });
+      const region = await Configs.findOne({ code: 'region' });
+
+      return {
+        accessKeyId: accessKeyId.value || '',
+        region: region.value || '',
+        secretAccessKey: secretAccessKey.value || '',
+      };
     }
   }
 

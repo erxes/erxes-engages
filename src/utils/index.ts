@@ -1,15 +1,11 @@
 import * as AWS from 'aws-sdk';
 import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
-import Configs, { configIdByDefault } from '../models/Configs';
+import Configs from '../models/Configs';
 import { debugBase, debugExternalRequests } from './debuggers';
 
 export const createTransporter = async () => {
-  const config = await Configs.findById(configIdByDefault);
-
-  if (!config) {
-    return;
-  }
+  const config = await Configs.getConfigs();
 
   AWS.config.update({
     region: config.region,

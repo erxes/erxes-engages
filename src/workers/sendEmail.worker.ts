@@ -23,6 +23,10 @@ connect().then(async () => {
 
   const { user, email, result, engageMessageId } = workerData;
 
+  if (result.length === 0) {
+    return;
+  }
+
   const { content, subject, attachments } = email;
 
   const transporter = await createTransporter();
@@ -69,7 +73,7 @@ connect().then(async () => {
       return;
     }
 
-    await Stats.updateOne({ _id: engageMessageId }, { $inc: { total: 1 } });
+    await Stats.updateOne({ engageMessageId }, { $inc: { total: 1 } });
   }
 
   mongoose.connection.close();

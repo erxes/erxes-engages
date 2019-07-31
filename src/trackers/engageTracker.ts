@@ -1,10 +1,9 @@
 import * as AWS from 'aws-sdk';
 import { Configs, DeliveryReports, Stats } from '../models';
-import { configIdByDefault } from '../models/Configs';
 import { fetchMainApi } from '../utils';
 
 export const getApi = async (type: string): Promise<any> => {
-  const config = await Configs.findById(configIdByDefault);
+  const config = await Configs.getConfigs();
 
   if (!config) {
     return;
