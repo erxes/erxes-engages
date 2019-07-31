@@ -65,11 +65,8 @@ connect().then(async () => {
         },
       });
     } catch (e) {
-      if (e.message === 'The security token included in the request is invalid') {
-        return;
-      }
-
-      console.log(e);
+      console.log(e.message);
+      return;
     }
 
     await Stats.updateOne({ _id: engageMessageId }, { $inc: { total: 1 } });
