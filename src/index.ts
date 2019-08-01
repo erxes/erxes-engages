@@ -3,19 +3,18 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 import configs from './api/configs';
 import deliveryReports from './api/deliveryReports';
-import engages from './api/engages';
 
 // load environment variables
 dotenv.config();
 
 import { connect } from './connection';
 import { debugBase, debugInit } from './debuggers';
-import { initMessageQueue } from './messageQueue';
+import { initConsumer } from './messageQueue';
 import { trackEngages } from './trackers/engageTracker';
 
 connect();
 
-initMessageQueue();
+initConsumer();
 
 const app = express();
 
@@ -33,7 +32,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Insert routes below
-app.use('/engages', engages);
 app.use('/configs', configs);
 app.use('/deliveryReports', deliveryReports);
 
