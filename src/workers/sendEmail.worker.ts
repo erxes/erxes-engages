@@ -24,10 +24,6 @@ connect().then(async () => {
 
   const { user, email, result, engageMessageId } = workerData;
 
-  if (result.length === 0) {
-    return;
-  }
-
   const { content, subject, attachments } = email;
 
   const transporter = await createTransporter();

@@ -69,21 +69,21 @@ export const getEnv = ({ name, defaultValue }: { name: string; defaultValue?: st
   return value || '';
 };
 
-export const sendMessage = async data => {
+export const sendMessage = async (channelName: string, data) => {
   const { NODE_ENV, RABBITMQ_HOST = 'amqp://localhost' } = process.env;
 
   if (NODE_ENV === 'test') {
     return;
   }
 
-  debugBase('Sending data to channel:engage-workers', data);
+  debugBase(`Sending data to channel:${channelName}`, data);
 
   try {
     const conn = await amqplib.connect(RABBITMQ_HOST);
     const channel = await conn.createChannel();
 
-    await channel.assertQueue('engage-workers');
-    await channel.sendToQueue('engage-workers', Buffer.from(JSON.stringify({ data })));
+    await channel.assertQueue(channelName);
+    await channel.sendToQueue(channelName, Buffer.from(JSON.stringify({ data })));
   } catch (e) {
     debugBase(e.message);
   }

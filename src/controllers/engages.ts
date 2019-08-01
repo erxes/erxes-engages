@@ -7,7 +7,7 @@ export const send = async (req, res) => {
   const { customers, email, user, engageMessageId } = req.body;
 
   try {
-    await sendMessage({
+    await sendMessage('engage-workers', {
       customers,
       email,
       engageMessageId,

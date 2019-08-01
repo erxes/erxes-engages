@@ -26,8 +26,7 @@
     "express": "^4.16.4",
     "meteor-random": "^0.0.3",
     "mongoose": "^5.2.16",
-    "nodemailer": "^6.2.1",
-    "requestify": "^0.2.5"
+    "nodemailer": "^6.2.1"
   },
   "peerOptionalDependencies": {
     "kerberos": "^1.0.0"

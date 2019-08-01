@@ -1,6 +1,7 @@
 import * as AWS from 'aws-sdk';
-import { fetchMainApi } from '../controllers/utils';
 import { Configs, DeliveryReports, Stats } from '../models';
+import { sendMessage } from '../utils';
+import { debugBase } from '../utils/debuggers';
 
 export const getApi = async (type: string): Promise<any> => {
   const config = await Configs.getConfigs();
@@ -51,45 +52,25 @@ const handleMessage = async message => {
   const rejected = await DeliveryReports.updateOrCreateReport(mailHeaders, type);
 
   if (rejected === 'reject') {
-    await fetchMainApi({
-      path: `engages-api`,
-      body: {
-        action: 'update-customer',
-        payload: JSON.stringify({
-          _id: mail.customerId,
-          doNotDisturb: true,
-        }),
-      },
-      method: `post`,
-    });
+    await sendMessage('engagesApi', { customerId: mail.customerId });
   }
 
   return true;
 };
 
 export const trackEngages = expressApp => {
-  expressApp.post(`/service/engage/tracker`, (req, res) => {
-    const chunks: any = [];
+  expressApp.post(`/service/engage/tracker`, async (req, res) => {
+    debugBase('receiving on tracker:', req.body);
 
-    req.setEncoding('utf8');
+    const { Type = '', Message = {}, Token = '', TopicArn = '' } = req.body;
 
-    req.on('data', chunk => {
-      chunks.push(chunk);
-    });
+    if (Type === 'SubscriptionConfirmation') {
+      await getApi('sns').then(api => api.confirmSubscription({ Token, TopicArn }).promise());
 
-    req.on('end', async () => {
-      const message = JSON.parse(chunks.join(''));
+      return res.end('success');
+    }
 
-      const { Type = '', Message = {}, Token = '', TopicArn = '' } = message;
-
-      if (Type === 'SubscriptionConfirmation') {
-        await getApi('sns').then(api => api.confirmSubscription({ Token, TopicArn }).promise());
-
-        return res.end('success');
-      }
-
-      await handleMessage(Message);
-    });
+    await handleMessage(Message);
 
     return res.end('success');
   });

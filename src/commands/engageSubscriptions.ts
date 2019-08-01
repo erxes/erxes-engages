@@ -9,7 +9,7 @@ const start = () => {
   dotenv.config();
 
   const MONGO_URL = getEnv({ name: 'MONGO_URL' });
-  const DOMAIN = getEnv({ name: 'DOMAIN' });
+  const MAIN_API_DOMAIN = getEnv({ name: 'MAIN_API_DOMAIN' });
 
   let topicArn = '';
 
@@ -32,7 +32,7 @@ const start = () => {
           .subscribe({
             TopicArn: topicArn,
             Protocol: 'https',
-            Endpoint: `${DOMAIN}/service/engage/tracker`,
+            Endpoint: `${MAIN_API_DOMAIN}/service/engage/tracker`,
           })
           .promise();
       })
