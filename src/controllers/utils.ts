@@ -1,4 +1,4 @@
-import { debugEngages, debugResponse } from '../utils/debuggers';
+import { debugEngages, debugResponse } from '../debuggers';
 
 export const respondWithResult = (req, res: any, statusCode?: number) => {
   statusCode = statusCode || 200;

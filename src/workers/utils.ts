@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
 import * as mongoose from 'mongoose';
 import * as os from 'os';
+import { debugWorkers } from '../debuggers';
 import { getEnv } from '../utils';
-import { debugWorkers } from '../utils/debuggers';
 
 dotenv.config();
 

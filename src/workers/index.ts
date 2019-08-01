@@ -1,15 +1,12 @@
-import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { Stats } from '../models';
-import { debugWorkers } from '../utils/debuggers';
+import { debugWorkers } from '../debuggers';
 import { createWorkers, splitToCore } from './utils';
 
 dotenv.config();
 
-const { RABBITMQ_HOST = 'amqp://localhost' } = process.env;
-
-const reciveMessage = async ({ data }) => {
+export const receiveMessage = async ({ data }) => {
   debugWorkers('receiveMessage:', data);
 
   const { user, email, engageMessageId, customers } = data;
@@ -34,24 +31,4 @@ const reciveMessage = async ({ data }) => {
   await createWorkers(workerPath, workerData, results);
 
   return true;
-};
-
-export const initConsumer = async () => {
-  // Consumer
-  try {
-    const conn = await amqplib.connect(RABBITMQ_HOST);
-    const channel = await conn.createChannel();
-
-    await channel.assertQueue('engage-workers');
-    debugWorkers('Listening queue channel:engage-workers');
-
-    channel.consume('engage-workers', async msg => {
-      if (msg !== null) {
-        await reciveMessage(JSON.parse(msg.content.toString()));
-        channel.ack(msg);
-      }
-    });
-  } catch (e) {
-    debugWorkers(e.message);
-  }
 };

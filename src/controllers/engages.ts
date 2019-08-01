@@ -1,5 +1,5 @@
-import { sendMessage } from '../utils';
-import { debugEngages, debugRequest, debugResponse } from '../utils/debuggers';
+import { debugEngages, debugRequest, debugResponse } from '../debuggers';
+import { sendMessage } from '../messageQueue';
 
 export const send = async (req, res) => {
   debugRequest(debugEngages, req);

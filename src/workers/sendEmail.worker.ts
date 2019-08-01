@@ -1,8 +1,8 @@
 import * as Random from 'meteor-random';
 import * as mongoose from 'mongoose';
+import { debugWorkers } from '../debuggers';
 import { Configs, Stats } from '../models';
 import { createTransporter, getEnv, replaceKeys } from '../utils';
-import { debugWorkers } from '../utils/debuggers';
 import { connect } from './utils';
 
 // tslint:disable-next-line

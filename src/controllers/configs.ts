@@ -1,5 +1,5 @@
+import { debugEngages, debugRequest } from '../debuggers';
 import { Configs } from '../models';
-import { debugEngages, debugRequest } from '../utils/debuggers';
 import { handleError, respondWithResult } from './utils';
 
 export const save = async (req, res) => {

@@ -7,9 +7,9 @@ import routes from './routes';
 dotenv.config();
 
 import { connect } from './connection';
+import { debugBase, debugInit } from './debuggers';
+import { initConsumer } from './messageQueue';
 import { trackEngages } from './trackers/engageTracker';
-import { debugBase, debugInit } from './utils/debuggers';
-import { initConsumer } from './workers';
 
 connect();
 
@@ -31,6 +31,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 routes(app);
+
 trackEngages(app);
 
 // Error handling middleware

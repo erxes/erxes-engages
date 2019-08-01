@@ -1,7 +1,7 @@
 import * as AWS from 'aws-sdk';
+import { debugBase } from '../debuggers';
+import { sendMessage } from '../messageQueue';
 import { Configs, DeliveryReports, Stats } from '../models';
-import { sendMessage } from '../utils';
-import { debugBase } from '../utils/debuggers';
 
 export const getApi = async (type: string): Promise<any> => {
   const config = await Configs.getConfigs();

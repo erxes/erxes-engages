@@ -1,5 +1,5 @@
+import { debugEngages, debugRequest } from '../debuggers';
 import { DeliveryReports, Stats } from '../models';
-import { debugEngages, debugRequest } from '../utils/debuggers';
 import { handeResultNotFoundWithEmptyObject, handleError, respondWithResult } from './utils';
 
 export const reportsList = async (req, res) => {
