@@ -1,7 +1,9 @@
 import * as bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
 import * as express from 'express';
-import routes from './routes';
+import configs from './api/configs';
+import deliveryReports from './api/deliveryReports';
+import engages from './api/engages';
 
 // load environment variables
 dotenv.config();
@@ -30,7 +32,10 @@ app.use((req: any, _res, next) => {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-routes(app);
+// Insert routes below
+app.use('/engages', engages);
+app.use('/configs', configs);
+app.use('/deliveryReports', deliveryReports);
 
 trackEngages(app);
 
