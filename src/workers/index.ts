@@ -1,14 +1,11 @@
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { Stats } from '../models';
-import { debugWorkers } from '../debuggers';
 import { createWorkers, splitToCore } from './utils';
 
 dotenv.config();
 
-export const receiveMessage = async ({ data }) => {
-  debugWorkers('receiveMessage:', data);
-
+export const start = async (data) => {
   const { user, email, engageMessageId, customers } = data;
 
   const results: string[] = splitToCore(customers);

@@ -10,12 +10,12 @@ dotenv.config();
 
 import { connect } from './connection';
 import { debugBase, debugInit } from './debuggers';
-import { initConsumer } from './messageQueue';
+import { initMessageQueue } from './messageQueue';
 import { trackEngages } from './trackers/engageTracker';
 
 connect();
 
-initConsumer();
+initMessageQueue();
 
 const app = express();
 

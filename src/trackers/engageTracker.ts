@@ -52,7 +52,7 @@ const handleMessage = async message => {
   const rejected = await DeliveryReports.updateOrCreateReport(mailHeaders, type);
 
   if (rejected === 'reject') {
-    await sendMessage('engagesApi', { customerId: mail.customerId });
+    await sendMessage('setDoNotDisturb', { customerId: mail.customerId });
   }
 
   return true;
@@ -70,6 +70,7 @@ export const trackEngages = expressApp => {
 
     req.on('end', async () => {
       const message = JSON.parse(chunks.join(''));
+
       debugBase('receiving on tracker:', message);
 
       const { Type = '', Message = {}, Token = '', TopicArn = '' } = message;
