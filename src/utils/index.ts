@@ -1,3 +1,4 @@
+import * as amqplib from 'amqplib';
 import * as AWS from 'aws-sdk';
 import * as nodemailer from 'nodemailer';
 import Configs from '../models/Configs';
@@ -66,4 +67,24 @@ export const getEnv = ({ name, defaultValue }: { name: string; defaultValue?: st
   }
 
   return value || '';
+};
+
+export const sendMessage = async data => {
+  const { NODE_ENV, RABBITMQ_HOST = 'amqp://localhost' } = process.env;
+
+  if (NODE_ENV === 'test') {
+    return;
+  }
+
+  debugBase('Sending data to channel:worker', data);
+
+  try {
+    const conn = await amqplib.connect(RABBITMQ_HOST);
+    const channel = await conn.createChannel();
+
+    await channel.assertQueue('worker');
+    await channel.sendToQueue('worker', Buffer.from(JSON.stringify({ data })));
+  } catch (e) {
+    debugBase(e.message);
+  }
 };

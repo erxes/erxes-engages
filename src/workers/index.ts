@@ -1,30 +1,18 @@
-import * as bodyParser from 'body-parser';
+import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
-import * as express from 'express';
 import * as path from 'path';
-import { connect } from '../connection';
 import { Stats } from '../models';
-import { debugRequest, debugWorkers } from '../utils/debuggers';
+import { debugWorkers } from '../utils/debuggers';
 import { createWorkers, splitToCore } from './utils';
 
-// load environment variables
 dotenv.config();
 
-// connect to mongo database
-connect();
+const { RABBITMQ_HOST = 'amqp://localhost' } = process.env;
 
-const app = express();
+const reciveMessage = async ({ data }) => {
+  debugWorkers('receiveMessage:', data);
 
-// for health check
-app.get('/status', async (_req, res) => {
-  res.end('ok');
-});
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-app.post('/send', async (req: any, res) => {
-  const { user, email, engageMessageId, customers } = req.body;
+  const { user, email, engageMessageId, customers } = data;
 
   const results: string[] = splitToCore(customers);
 
@@ -45,19 +33,25 @@ app.post('/send', async (req: any, res) => {
 
   await createWorkers(workerPath, workerData, results);
 
-  debugRequest(debugWorkers, req);
+  return true;
+};
 
-  return res.status(200).end();
-});
+export const initConsumer = async () => {
+  // Consumer
+  try {
+    const conn = await amqplib.connect(RABBITMQ_HOST);
+    const channel = await conn.createChannel();
 
-// Error handling middleware
-app.use((error, _req, res, _next) => {
-  console.error(error.stack);
-  res.status(500).send(error.message);
-});
+    await channel.assertQueue('worker');
+    debugWorkers('Listening queue channel:worker');
 
-const { PORT_WORKERS } = process.env;
-
-app.listen(PORT_WORKERS, () => {
-  debugWorkers(`Workers server is now running on ${PORT_WORKERS}`);
-});
+    channel.consume('worker', async msg => {
+      if (msg !== null) {
+        await reciveMessage(JSON.parse(msg.content.toString()));
+        channel.ack(msg);
+      }
+    });
+  } catch (e) {
+    debugWorkers(e.message);
+  }
+};

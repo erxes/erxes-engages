@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import * as mongoose from 'mongoose';
 import * as os from 'os';
 import { getEnv } from '../utils';
+import { debugWorkers } from '../utils/debuggers';
 
 dotenv.config();
 
@@ -34,13 +35,13 @@ export const createWorkers = (workerPath: string, workerData: any, results: stri
           });
 
           worker.on('error', e => {
-            console.log(e);
+            debugWorkers(e);
             removeWorker(worker);
           });
 
           worker.on('exit', code => {
             if (code !== 0) {
-              console.log(`Worker stopped with exit code ${code}`);
+              debugWorkers(`Worker stopped with exit code ${code}`);
             }
           });
         } catch (e) {

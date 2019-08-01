@@ -9,8 +9,11 @@ dotenv.config();
 import { connect } from './connection';
 import { trackEngages } from './trackers/engageTracker';
 import { debugBase, debugInit } from './utils/debuggers';
+import { initConsumer } from './workers';
 
 connect();
+
+initConsumer();
 
 const app = express();
 
