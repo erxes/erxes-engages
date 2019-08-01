@@ -60,19 +60,30 @@ const handleMessage = async message => {
 
 export const trackEngages = expressApp => {
   expressApp.post(`/service/engage/tracker`, async (req, res) => {
-    debugBase('receiving on tracker:', req.body);
+    const chunks: any = [];
 
-    const { Type = '', Message = {}, Token = '', TopicArn = '' } = req.body;
+    req.setEncoding('utf8');
 
-    if (Type === 'SubscriptionConfirmation') {
-      await getApi('sns').then(api => api.confirmSubscription({ Token, TopicArn }).promise());
+    req.on('data', chunk => {
+      chunks.push(chunk);
+    });
+
+    req.on('end', async () => {
+      const message = JSON.parse(chunks.join(''));
+      debugBase('receiving on tracker:', message);
+
+      const { Type = '', Message = {}, Token = '', TopicArn = '' } = message;
+
+      if (Type === 'SubscriptionConfirmation') {
+        await getApi('sns').then(api => api.confirmSubscription({ Token, TopicArn }).promise());
+
+        return res.end('success');
+      }
+
+      await handleMessage(Message);
 
       return res.end('success');
-    }
-
-    await handleMessage(Message);
-
-    return res.end('success');
+    });
   });
 };
 
