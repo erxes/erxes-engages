@@ -16,15 +16,13 @@ export const initConsumer = async () => {
     channel = await conn.createChannel();
 
     // listen for erxes api ===========
-    await channel.assertQueue('erxes-api-notification');
+    await channel.assertQueue('erxes-api:send-engage');
 
-    channel.consume('erxes-api-notification', async msg => {
+    channel.consume('erxes-api:send-engage', async msg => {
       if (msg !== null) {
-        const { action, data } = JSON.parse(msg.content.toString());
+        const data = JSON.parse(msg.content.toString());
 
-        if (action === 'sendEngage') {
-          start(data);
-        }
+        start(data);
 
         channel.ack(msg);
       }
@@ -42,8 +40,8 @@ export const sendMessage = async (action: string, data: any) => {
   debugBase(`Sending data to engagesApi queue`, data);
 
   try {
-    await channel.assertQueue('engagesApi');
-    await channel.sendToQueue('engagesApi', Buffer.from(JSON.stringify({ action, data })));
+    await channel.assertQueue('engages-api:set-donot-disturb');
+    await channel.sendToQueue('engages-api:set-donot-disturb', Buffer.from(JSON.stringify({ action, data })));
   } catch (e) {
     debugBase(e.message);
   }
