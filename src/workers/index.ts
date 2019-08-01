@@ -42,10 +42,10 @@ export const initConsumer = async () => {
     const conn = await amqplib.connect(RABBITMQ_HOST);
     const channel = await conn.createChannel();
 
-    await channel.assertQueue('worker');
-    debugWorkers('Listening queue channel:worker');
+    await channel.assertQueue('engage-workers');
+    debugWorkers('Listening queue channel:engage-workers');
 
-    channel.consume('worker', async msg => {
+    channel.consume('engage-workers', async msg => {
       if (msg !== null) {
         await reciveMessage(JSON.parse(msg.content.toString()));
         channel.ack(msg);

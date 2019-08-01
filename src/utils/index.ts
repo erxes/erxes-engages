@@ -76,14 +76,14 @@ export const sendMessage = async data => {
     return;
   }
 
-  debugBase('Sending data to channel:worker', data);
+  debugBase('Sending data to channel:engage-workers', data);
 
   try {
     const conn = await amqplib.connect(RABBITMQ_HOST);
     const channel = await conn.createChannel();
 
-    await channel.assertQueue('worker');
-    await channel.sendToQueue('worker', Buffer.from(JSON.stringify({ data })));
+    await channel.assertQueue('engage-workers');
+    await channel.sendToQueue('engage-workers', Buffer.from(JSON.stringify({ data })));
   } catch (e) {
     debugBase(e.message);
   }
