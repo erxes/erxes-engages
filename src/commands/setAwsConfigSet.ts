@@ -13,9 +13,9 @@ const start = () => {
     const options = { upsert: true, new: true, setDefaultsOnInsert: true };
 
     await Configs.updateOne({ code: 'configSet' }, { $set: { value: process.argv[2] } }, options);
-  });
 
-  process.exit();
+    console.log('Successfully created config set', process.argv[2]);
+  });
 };
 
 start();
