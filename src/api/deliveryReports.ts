@@ -11,7 +11,7 @@ router.get('/statsList/:engageMessageId', async (req, res) => {
 
   const { engageMessageId } = req.params;
 
-  return DeliveryReports.findOne({ engageMessageId })
+  return Stats.findOne({ engageMessageId })
     .then(handeResultNotFoundWithEmptyObject(req, res))
     .then(respondWithResult(req, res))
     .catch(handleError(req, res));
@@ -20,7 +20,7 @@ router.get('/statsList/:engageMessageId', async (req, res) => {
 router.get(`/reportsList/:engageMessageId`, async (req, res) => {
   debugRequest(debugEngages, req);
 
-  return Stats.findOne({ engageMessageId: req.params.engageMessageId })
+  return DeliveryReports.findOne({ engageMessageId: req.params.engageMessageId })
     .then(handeResultNotFoundWithEmptyObject(req, res))
     .then(respondWithResult(req, res))
     .catch(handleError(req, res));
