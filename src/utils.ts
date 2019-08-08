@@ -2,6 +2,7 @@ import * as AWS from 'aws-sdk';
 import * as nodemailer from 'nodemailer';
 import { debugBase } from './debuggers';
 import Configs from './models/Configs';
+import { getApi } from './trackers/engageTracker';
 
 export const createTransporter = async () => {
   const config = await Configs.getConfigs();
@@ -66,4 +67,79 @@ export const getEnv = ({ name, defaultValue }: { name: string; defaultValue?: st
   }
 
   return value || '';
+};
+
+export const subscribeEngage = () => {
+  return new Promise(async (resolve, reject) => {
+    const snsApi = await getApi('sns');
+    const sesApi = await getApi('ses');
+    const configSet = `erxes`;
+
+    const MAIN_API_DOMAIN = getEnv({ name: 'MAIN_API_DOMAIN' });
+
+    const topicArn = await snsApi
+      .createTopic({ Name: configSet })
+      .promise()
+      .catch(e => {
+        return reject(e.message);
+      });
+
+    await snsApi
+      .subscribe({
+        TopicArn: topicArn.TopicArn,
+        Protocol: 'https',
+        Endpoint: `${MAIN_API_DOMAIN}/service/engage/tracker`,
+      })
+      .promise()
+      .catch(e => {
+        return reject(e.message);
+      });
+
+    await sesApi
+      .createConfigurationSet({
+        ConfigurationSet: {
+          Name: configSet,
+        },
+      })
+      .promise()
+      .catch(e => {
+        if (e.message.includes('already exists')) {
+          return;
+        }
+
+        return reject(e.message);
+      });
+
+    await sesApi
+      .createConfigurationSetEventDestination({
+        ConfigurationSetName: configSet,
+        EventDestination: {
+          MatchingEventTypes: [
+            'send',
+            'reject',
+            'bounce',
+            'complaint',
+            'delivery',
+            'open',
+            'click',
+            'renderingFailure',
+          ],
+          Name: configSet,
+          Enabled: true,
+          SNSDestination: {
+            TopicARN: topicArn.TopicArn,
+          },
+        },
+      })
+      .promise()
+      .catch(e => {
+        if (e.message.includes('already exists')) {
+          return;
+        }
+
+        return reject(e.message);
+      });
+
+    return resolve(true);
+  });
 };

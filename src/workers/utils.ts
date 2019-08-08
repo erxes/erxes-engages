@@ -2,7 +2,6 @@ import * as dotenv from 'dotenv';
 import * as mongoose from 'mongoose';
 import * as os from 'os';
 import { debugWorkers } from '../debuggers';
-import { getEnv } from '../utils';
 
 dotenv.config();
 
@@ -96,6 +95,6 @@ export const clearIntervals = () => {
   intervals = [];
 };
 
-const MONGO_URL = getEnv({ name: 'MONGO_URL' });
+const { MONGO_URL } = process.env;
 
 export const connect = () => mongoose.connect(MONGO_URL, { useNewUrlParser: true, useCreateIndex: true });
