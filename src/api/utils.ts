@@ -28,7 +28,10 @@ export const handleError = (req, res: any, statusCode?: number) => {
 
   return err => {
     debugResponse(debugEngages, req, JSON.stringify(err));
-    res.status(statusCode).send(err);
+
+    return res.send(statusCode, {
+      error: err.message ? err.message : err,
+    });
   };
 };
 
