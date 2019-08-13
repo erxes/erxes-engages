@@ -84,6 +84,10 @@ export const subscribeEngage = () => {
         return reject(e.message);
       });
 
+    if (!topicArn) {
+      return reject('Error occured');
+    }
+
     await snsApi
       .subscribe({
         TopicArn: topicArn.TopicArn,
