@@ -45,8 +45,17 @@ connect().then(async () => {
     let replacedContent = replaceKeys({ content, customer, user });
 
     const MAIN_API_DOMAIN = getEnv({ name: 'MAIN_API_DOMAIN' });
-    const configSetDb = await Configs.findOne({ code: 'configSet' });
-    const configSet = configSetDb.value;
+
+    let configSet = {};
+
+    try {
+      const configSetDb = await Configs.findOne({ code: 'configSet' });
+      configSet = configSetDb.value;
+    } catch (e) {
+      debugWorkers(e.message);
+      cancel = true;
+      parentPort.postMessage('Error occured');
+    }
 
     const unSubscribeUrl = `${MAIN_API_DOMAIN}/unsubscribe/?cid=${customer._id}`;
 
@@ -69,7 +78,8 @@ connect().then(async () => {
       debugWorkers('Sent email to:', customer.email);
     } catch (e) {
       debugWorkers(e.message);
-      return;
+      cancel = true;
+      parentPort.postMessage('Error occured');
     }
 
     await Stats.updateOne({ engageMessageId }, { $inc: { total: 1 } });
