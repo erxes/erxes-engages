@@ -4,26 +4,31 @@ const router = Router();
 
 import { debugEngages, debugRequest } from '../debuggers';
 import { DeliveryReports, Stats } from '../models';
-import { handeResultNotFoundWithEmptyObject, handleError, respondWithResult } from './utils';
 
 router.get('/statsList/:engageMessageId', async (req, res) => {
   debugRequest(debugEngages, req);
 
   const { engageMessageId } = req.params;
 
-  return Stats.findOne({ engageMessageId })
-    .then(handeResultNotFoundWithEmptyObject(req, res))
-    .then(respondWithResult(req, res))
-    .catch(handleError(req, res));
+  const stats = await Stats.findOne({ engageMessageId });
+
+  if (!stats) {
+    return res.json({});
+  }
+
+  return res.json(stats);
 });
 
 router.get(`/reportsList/:engageMessageId`, async (req, res) => {
   debugRequest(debugEngages, req);
 
-  return DeliveryReports.findOne({ engageMessageId: req.params.engageMessageId })
-    .then(handeResultNotFoundWithEmptyObject(req, res))
-    .then(respondWithResult(req, res))
-    .catch(handleError(req, res));
+  const deliveryReports = await DeliveryReports.findOne({ engageMessageId: req.params.engageMessageId });
+
+  if (!deliveryReports) {
+    return res.json({});
+  }
+
+  return res.json(deliveryReports);
 });
 
 export default router;

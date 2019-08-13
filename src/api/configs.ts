@@ -2,29 +2,36 @@ import { Router } from 'express';
 import { debugEngages, debugRequest } from '../debuggers';
 import { Configs } from '../models';
 import { subscribeEngage } from '../utils';
-import { handleError, respondWithResult } from './utils';
 
 const router = Router();
 
-router.post('/save', async (req, res) => {
+router.post('/save', async (req, res, next) => {
   debugRequest(debugEngages, req);
 
-  return Configs.updateConfig(req.body)
-    .then(async configObj => {
-      await subscribeEngage();
+  let config = {};
 
-      return configObj;
-    })
-    .then(respondWithResult(req, res, 201))
-    .catch(handleError(req, res));
+  try {
+    config = await Configs.updateConfig(req.body);
+    await subscribeEngage();
+  } catch (e) {
+    return next(new Error(e));
+  }
+
+  return res.json(config);
 });
 
-router.get(`/detail`, async (req, res) => {
+router.get(`/detail`, async (req, res, next) => {
   debugRequest(debugEngages, req);
 
-  return Configs.getConfigs()
-    .then(respondWithResult(req, res, 201))
-    .catch(handleError(req, res));
+  let configs = {};
+
+  try {
+    configs = await Configs.getConfigs();
+  } catch (e) {
+    return next(new Error(e));
+  }
+
+  return res.json(configs);
 });
 
 export default router;

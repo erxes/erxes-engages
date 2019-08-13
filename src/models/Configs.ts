@@ -38,9 +38,9 @@ export const loadClass = () => {
       const region = await Configs.findOne({ code: 'region' });
 
       return {
-        accessKeyId: accessKeyId.value || '',
-        region: region.value || '',
-        secretAccessKey: secretAccessKey.value || '',
+        accessKeyId: accessKeyId ? accessKeyId.value : '',
+        region: region ? region.value : '',
+        secretAccessKey: secretAccessKey ? secretAccessKey.value : '',
       };
     }
   }
