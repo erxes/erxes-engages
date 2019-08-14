@@ -1,7 +1,7 @@
 import * as Random from 'meteor-random';
 import * as mongoose from 'mongoose';
 import { debugWorkers } from '../debuggers';
-import { Configs, Stats } from '../models';
+import { Stats } from '../models';
 import { createTransporter, getEnv, replaceKeys } from '../utils';
 import { connect } from './utils';
 
@@ -46,17 +46,6 @@ connect().then(async () => {
 
     const MAIN_API_DOMAIN = getEnv({ name: 'MAIN_API_DOMAIN' });
 
-    let configSet = {};
-
-    try {
-      const configSetDb = await Configs.findOne({ code: 'configSet' });
-      configSet = configSetDb.value;
-    } catch (e) {
-      debugWorkers(e.message);
-      cancel = true;
-      parentPort.postMessage('Error occured');
-    }
-
     const unSubscribeUrl = `${MAIN_API_DOMAIN}/unsubscribe/?cid=${customer._id}`;
 
     replacedContent += `<div style="padding: 10px; color: #ccc; text-align: center; font-size:12px;">If you want to use service like this click <a style="text-decoration: underline; color: #ccc;" href="https://erxes.io" target="_blank">here</a> to read more. Also you can opt out from our email subscription <a style="text-decoration: underline;color: #ccc;" rel="noopener" target="_blank" href="${unSubscribeUrl}">here</a>.  <br>© 2019 erxes inc Growth Marketing Platform </div>`;
@@ -69,7 +58,7 @@ connect().then(async () => {
         attachments: mailAttachment,
         html: replacedContent,
         headers: {
-          'X-SES-CONFIGURATION-SET': configSet,
+          'X-SES-CONFIGURATION-SET': 'erxes',
           EngageMessageId: engageMessageId,
           CustomerId: customer._id,
           MailMessageId: mailMessageId,
