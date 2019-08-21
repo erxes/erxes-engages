@@ -41,8 +41,9 @@ trackEngages(app);
 
 // Error handling middleware
 app.use((error, _req, res, _next) => {
-  debugBase(`Error: `, filterXSS(error.message));
-  res.status(500).send(filterXSS(error.message));
+  var msg = filterXSS(error.message);
+  debugBase(`Error: `, msg);
+  res.status(500).send(msg);
 });
 
 const { PORT } = process.env;
