@@ -41,7 +41,8 @@ trackEngages(app);
 
 // Error handling middleware
 app.use((error, _req, res, _next) => {
-  var msg = filterXSS(error.message);
+  const msg = filterXSS(error.message);
+
   debugBase(`Error: `, msg);
   res.status(500).send(msg);
 });
