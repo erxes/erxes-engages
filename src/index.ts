@@ -1,6 +1,7 @@
 import * as bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
 import * as express from 'express';
+import { filterXSS } from 'xss'
 import configs from './api/configs';
 import deliveryReports from './api/deliveryReports';
 
@@ -18,6 +19,7 @@ initConsumer();
 
 const app = express();
 
+app.disable('x-powered-by');
 app.use((req: any, _res, next) => {
   req.rawBody = '';
 
@@ -39,8 +41,10 @@ trackEngages(app);
 
 // Error handling middleware
 app.use((error, _req, res, _next) => {
-  debugBase(`Error: `, error.message);
-  res.status(500).send(error.message);
+  const msg = filterXSS(error.message);
+
+  debugBase(`Error: `, msg);
+  res.status(500).send(msg);
 });
 
 const { PORT } = process.env;
