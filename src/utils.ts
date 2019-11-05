@@ -73,7 +73,7 @@ export const subscribeEngage = () => {
   return new Promise(async (resolve, reject) => {
     const snsApi = await getApi('sns');
     const sesApi = await getApi('ses');
-    const configSet = `erxes`;
+    const configSet = getEnv({ name: 'AWS_SES_CONFIG_SET', defaultValue: 'erxes' });
 
     const MAIN_API_DOMAIN = getEnv({ name: 'MAIN_API_DOMAIN' });
 
