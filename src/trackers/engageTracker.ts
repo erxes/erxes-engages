@@ -100,6 +100,16 @@ export const trackEngages = expressApp => {
 
 export const awsRequests = {
   getVerifiedEmails() {
-    return getApi('ses').then(api => api.listVerifiedEmailAddresses().promise());
+    return getApi('ses')
+      .then(api => new Promise((resolve, reject) => {
+        api.listVerifiedEmailAddresses((error, data) => {
+          if (error) {
+            return reject(error);
+          }
+
+          return resolve(data.VerifiedEmailAddresses)
+        })
+      }))
+      .catch((e) => debugBase(e.message));
   },
 };
