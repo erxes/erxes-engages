@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.prod.json",
     "precommit": "lint-staged",
     "release": "release-it",
-    "test": "snyk test"
+    "test": "jest --forceExit --runInBand"
   },
   "lint-staged": {
     "*.ts": [
@@ -43,6 +43,7 @@
     "@types/mongoose": "^5.2.1",
     "@types/node": "^10.12.18",
     "@types/q": "^1.5.0",
+    "faker": "^4.1.0",
     "jest": "^24.9.0",
     "lint-staged": "^3.6.0",
     "prettier": "^1.13.7",
