@@ -12,4 +12,5 @@ module.exports = {
   testEnvironment: 'node',
   testPathIgnorePatterns: ['setup.ts', 'factories.ts'],
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
+  collectCoverageFrom: ['src/models/**', '!**/node_modules/**', '!**/vendor/**'],
 };

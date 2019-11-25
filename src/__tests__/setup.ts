@@ -3,17 +3,18 @@ import * as mongoose from 'mongoose';
 
 dotenv.config();
 
+let db;
+
 const getCollections = () => {
-  return Object.keys(mongoose.connection.collections);
+  return Object.keys(db.connection.collections);
 };
 
 const getCollectionByName = collectionName => {
-  return mongoose.connection.collections[collectionName];
+  return db.connection.collections[collectionName];
 };
 
 beforeAll(async done => {
-  await mongoose.connect(process.env.TEST_MONGO_URL);
-
+  db = await mongoose.connect(process.env.TEST_MONGO_URL);
   done();
 });
 
@@ -34,5 +35,9 @@ afterAll(async () => {
     }
   }
 
-  mongoose.connection.close();
+  db.connection.removeAllListeners('open');
+
+  db.connection.db.dropDatabase();
+
+  db.connection.close();
 });

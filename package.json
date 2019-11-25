@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.prod.json",
     "precommit": "lint-staged",
     "release": "release-it",
-    "test": "jest --forceExit --runInBand"
+    "test": "jest --coverage --forceExit --runInBand"
   },
   "lint-staged": {
     "*.ts": [

@@ -10,6 +10,7 @@ export interface IStats {
   send: number;
   renderingfailure: number;
   total: number;
+  engageMessageId: string;
 }
 
 export interface IStatsDocument extends IStats, Document {}

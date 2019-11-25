@@ -13,7 +13,7 @@ export const configsSchema = new Schema({
 });
 
 export interface IConfigModel extends Model<IConfigDocument> {
-  updateConfig(doc: IConfig): Promise<IConfigDocument>;
+  updateConfig(doc: { accessKeyId: string; secretAccessKey: string; region: string }): Promise<IConfigDocument>;
   getConfigs(): Promise<{ accessKeyId: string; secretAccessKey: string; region: string }>;
 }
 
