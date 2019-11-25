@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.prod.json",
     "precommit": "lint-staged",
     "release": "release-it",
-    "test": "snyk test"
+    "test": "jest --coverage --forceExit --runInBand"
   },
   "lint-staged": {
     "*.ts": [
@@ -25,9 +25,9 @@
     "dotenv": "^4.0.0",
     "express": "^4.16.4",
     "meteor-random": "^0.0.3",
-    "xss": "^1.0.6",
     "mongoose": "5.7.5",
-    "nodemailer": "^6.2.1"
+    "nodemailer": "^6.2.1",
+    "xss": "^1.0.6"
   },
   "peerOptionalDependencies": {
     "kerberos": "^1.0.0"
@@ -38,19 +38,23 @@
     "@types/cors": "^2.8.4",
     "@types/dotenv": "^4.0.3",
     "@types/express": "^4.16.0",
+    "@types/jest": "^24.0.23",
     "@types/mongodb": "^3.1.2",
     "@types/mongoose": "^5.2.1",
     "@types/node": "^10.12.18",
     "@types/q": "^1.5.0",
+    "faker": "^4.1.0",
+    "jest": "^24.9.0",
     "lint-staged": "^3.6.0",
     "prettier": "^1.13.7",
-    "snyk": "^1.239.5",
     "release-it": "^12.4.3",
+    "snyk": "^1.239.5",
+    "ts-jest": "^24.2.0",
     "ts-node": "8.0.3",
     "ts-node-dev": "^1.0.0-pre.32",
     "tslint": "^5.8.0",
     "tslint-config-prettier": "^1.1.0",
     "tslint-config-standard": "^7.0.0",
-    "typescript": "^2.9.2"
+    "typescript": "^3.7.2"
   }
 }
