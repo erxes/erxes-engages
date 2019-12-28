@@ -99,17 +99,17 @@ export const trackEngages = expressApp => {
 };
 
 export const awsRequests = {
-  getVerifiedEmails() {
-    return getApi('ses')
-      .then(api => new Promise((resolve, reject) => {
-        api.listVerifiedEmailAddresses((error, data) => {
-          if (error) {
-            return reject(error);
-          }
+  async getVerifiedEmails() {
+    const api = await getApi('ses');
 
-          return resolve(data.VerifiedEmailAddresses)
-        })
-      }))
-      .catch((e) => debugBase(e.message));
-  },
+    return new Promise((resolve, reject) => {
+      api.listVerifiedEmailAddresses((error, data) => {
+        if (error) {
+          return reject(error);
+        }
+
+        return resolve(data.VerifiedEmailAddresses)
+      })
+    });
+  }
 };
