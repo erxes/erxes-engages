@@ -3,7 +3,7 @@ import { Router } from 'express';
 const router = Router();
 
 import { debugEngages, debugRequest } from '../debuggers';
-import { DeliveryReports, Stats } from '../models';
+import { DeliveryReports, Logs, Stats } from '../models';
 
 router.get('/statsList/:engageMessageId', async (req, res) => {
   debugRequest(debugEngages, req);
@@ -29,6 +29,14 @@ router.get(`/reportsList/:engageMessageId`, async (req, res) => {
   }
 
   return res.json(deliveryReports);
+});
+
+router.get(`/logs/:engageMessageId`, async (req, res) => {
+  debugRequest(debugEngages, req);
+
+  const logs = await Logs.find({ engageMessageId: req.params.engageMessageId });
+
+  return res.json(logs);
 });
 
 export default router;

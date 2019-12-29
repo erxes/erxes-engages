@@ -1,7 +1,7 @@
 import * as Random from 'meteor-random';
 import * as mongoose from 'mongoose';
 import { debugWorkers } from '../debuggers';
-import { Stats } from '../models';
+import { Logs, Stats } from '../models';
 import { createTransporter, getEnv, replaceKeys } from '../utils';
 import { connect } from './utils';
 
@@ -27,6 +27,12 @@ connect().then(async () => {
   const { content, subject, attachments } = email;
 
   const transporter = await createTransporter();
+
+  const customerEmails = result.map(customer => customer.email);
+
+  if (customerEmails.length > 0) {
+    await Logs.createLog(engageMessageId, `Preparing to send emails to ${customerEmails}`);
+  }
 
   for (const customer of result) {
     const mailMessageId = Random.id();
@@ -64,11 +70,14 @@ connect().then(async () => {
           MailMessageId: mailMessageId,
         },
       });
-      debugWorkers('Sent email to:', customer.email);
+      const msg = `Sent email to: ${customer.email}`;
+      debugWorkers(msg);
+      await Logs.createLog(engageMessageId, msg);
     } catch (e) {
       debugWorkers(e.message);
+      await Logs.createLog(engageMessageId, `Error occurred: ${e.message}`);
       cancel = true;
-      parentPort.postMessage('Error occured');
+      parentPort.postMessage('Error occurred');
     }
 
     await Stats.updateOne({ engageMessageId }, { $inc: { total: 1 } });
