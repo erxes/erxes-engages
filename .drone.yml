@@ -5,6 +5,7 @@ pipeline:
       - TEST_MONGO_URL=mongodb://mongo/test
     commands:
       - yarn install
+      - yarn tsc
 
   build:
     image: node:10.16.0-slim
