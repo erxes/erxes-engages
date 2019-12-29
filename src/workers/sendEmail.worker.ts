@@ -31,7 +31,7 @@ connect().then(async () => {
   const customerEmails = result.map(customer => customer.email);
 
   if (customerEmails.length > 0) {
-    await Logs.createLog(engageMessageId, `Preparing to send emails to ${customerEmails}`);
+    await Logs.createLog(engageMessageId, "regular", `Preparing to send emails to ${customerEmails}`);
   }
 
   for (const customer of result) {
@@ -72,10 +72,10 @@ connect().then(async () => {
       });
       const msg = `Sent email to: ${customer.email}`;
       debugWorkers(msg);
-      await Logs.createLog(engageMessageId, msg);
+      await Logs.createLog(engageMessageId, "success", msg);
     } catch (e) {
       debugWorkers(e.message);
-      await Logs.createLog(engageMessageId, `Error occurred: ${e.message}`);
+      await Logs.createLog(engageMessageId, "failure", `Error occurred while sending email to ${customer.email}: ${e.message}`);
       cancel = true;
       parentPort.postMessage('Error occurred');
     }

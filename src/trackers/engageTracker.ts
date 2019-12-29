@@ -111,5 +111,33 @@ export const awsRequests = {
         return resolve(data.VerifiedEmailAddresses)
       })
     });
+  },
+
+  async verifyEmail(email: string) {
+    const api = await getApi('ses');
+
+    return new Promise((resolve, reject) => {
+      api.verifyEmailAddress({ EmailAddress: email }, (error, data) => {
+        if (error) {
+          return reject(error);
+        }
+
+        return resolve(data)
+      })
+    });
+  },
+
+  async removeVerifiedEmail(email: string) {
+    const api = await getApi('ses');
+
+    return new Promise((resolve, reject) => {
+      api.deleteVerifiedEmailAddress({ EmailAddress: email }, (error, data) => {
+        if (error) {
+          return reject(error);
+        }
+
+        return resolve(data)
+      })
+    });
   }
 };
