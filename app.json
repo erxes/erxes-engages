@@ -26,6 +26,7 @@
     "AWS_SES_CONFIG_SET": {
       "description": "AWS SES CONFIG SET",
       "value": "erxes"
+    }
   },
   "addons": [],
   "buildpacks": [
