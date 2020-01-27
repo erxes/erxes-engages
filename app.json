@@ -31,7 +31,7 @@
   "addons": [
     {
       "plan": "mongolab:sandbox",
-      "as": "MONGO_ENGAGES"
+      "as": "MONGO"
     }
   ],
   "buildpacks": [
