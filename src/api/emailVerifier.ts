@@ -4,7 +4,7 @@ import { sendRequest } from '../utils';
 
 const router = Router();
 
-router.post('/single', async (req, res, next) => {
+router.post('/single', async (req, res, _next) => {
   debugRequest(debugEngages, req);
 
   const { email } = req.query;
@@ -12,12 +12,20 @@ router.post('/single', async (req, res, next) => {
   const apiKey = 'LUbFcpWbOlqoOFEgHZ6Rw4x8zpFGhzckm1hfJ2rAr1UgzDKxxHq8la3dlkw050RH';
   const url = `https://truemail.io/api/v1/verify/single?access_token=${apiKey}&email=${email}`;
 
-  const response = await sendRequest({
+  const responseJSON = await sendRequest({
     url,
-    method: 'POST',
+    method: 'GET',
   });
 
+  const response = JSON.parse(responseJSON);
+
+  let result = 'invalid';
+
   if (response.status === 'success') {
-    return response.result;
+    result = response.result;
   }
+
+  return res.send(result);
 });
+
+export default router;

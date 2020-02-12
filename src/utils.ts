@@ -1,6 +1,6 @@
 import * as AWS from 'aws-sdk';
 import * as nodemailer from 'nodemailer';
-import * as request from 'request-promise';
+import * as requestify from 'requestify';
 import { debugBase, debugExternalRequests } from './debuggers';
 import Configs from './models/Configs';
 import { getApi } from './trackers/engageTracker';
@@ -149,54 +149,56 @@ export const subscribeEngage = () => {
   });
 };
 
-/**
- * Send request
- */
-export const sendRequest = ({ url, headerType, headerParams, method, body, params }: IRequestParams): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    const DOMAIN = getEnv({ name: 'DOMAIN' });
+interface IRequestParams {
+  url?: string;
+  path?: string;
+  method?: string;
+  headers?: { [key: string]: string };
+  params?: { [key: string]: string };
+  body?: { [key: string]: string };
+  form?: { [key: string]: string };
+}
 
-    const reqBody = JSON.stringify(body || {});
-    const reqParams = JSON.stringify(params || {});
+/**
+ * Sends post request to specific url
+ */
+export const sendRequest = async (
+  { url, method, headers, form, body, params }: IRequestParams,
+  errorMessage?: string,
+) => {
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
+
+  debugExternalRequests(`
+    Sending request to
+    url: ${url}
+    method: ${method}
+    body: ${JSON.stringify(body)}
+    params: ${JSON.stringify(params)}
+  `);
+
+  try {
+    const response = await requestify.request(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', origin: DOMAIN, ...(headers || {}) },
+      form,
+      body,
+      params,
+    });
+
+    const responseBody = response.getBody();
 
     debugExternalRequests(`
-        Sending request
-        url: ${url}
-        method: ${method}
-        body: ${reqBody}
-        params: ${reqParams}
-      `);
+      Success from : ${url}
+      responseBody: ${JSON.stringify(responseBody)}
+    `);
 
-    request({
-      uri: encodeURI(url),
-      method,
-      headers: {
-        'Content-Type': headerType || 'application/json',
-        ...headerParams,
-        origin: DOMAIN,
-      },
-      ...(headerType && headerType.includes('form') ? { form: body } : { body }),
-      qs: params,
-      json: true,
-    })
-      .then(res => {
-        debugExternalRequests(`
-        Success from ${url}
-        requestBody: ${reqBody}
-        requestParams: ${reqParams}
-        responseBody: ${JSON.stringify(res)}
-      `);
-
-        return resolve(res);
-      })
-      .catch(e => {
-        if (e.code === 'ECONNREFUSED') {
-          debugExternalRequests(`Failed to connect ${url}`);
-          throw new Error(`Failed to connect ${url}`);
-        } else {
-          debugExternalRequests(`Error occurred in ${url}: ${e.body}`);
-          reject(e);
-        }
-      });
-  });
+    return responseBody;
+  } catch (e) {
+    if (e.code === 'ECONNREFUSED' || e.code === 'ENOTFOUND') {
+      throw new Error(errorMessage);
+    } else {
+      const message = e.body || e.message;
+      throw new Error(message);
+    }
+  }
 };

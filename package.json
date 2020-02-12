@@ -27,7 +27,7 @@
     "meteor-random": "^0.0.3",
     "mongoose": "5.7.5",
     "nodemailer": "^6.2.1",
-    "request-promise": "^4.2.5",
+    "requestify": "^0.2.5",
     "xss": "^1.0.6"
   },
   "peerOptionalDependencies": {
