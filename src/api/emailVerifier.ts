@@ -1,6 +1,7 @@
 import * as EmailValidator from 'email-deep-validator';
 import { Router } from 'express';
 import { debugEngages, debugRequest } from '../debuggers';
+import { sendMessage } from '../messageQueue';
 import { Emails } from '../models';
 import { sendRequest } from '../utils';
 
@@ -50,71 +51,67 @@ router.post('/single', async (req, res, _next) => {
   return sendResult('invalid');
 });
 
-router.post('/bulk', async (req, res, _next) => {
-  debugRequest(debugEngages, req);
-  const emails = JSON.parse(req.body.emails || '[]');
-
+export const bulk = async (emails: string[]) => {
   const url = `https://truemail.io/api/v1/tasks/bulk?access_token=${apiKey}`;
 
-  const remainedEmails: any[] = [];
+  const unverifiedEmails: any[] = [];
+  const verifiedEmails: any[] = [];
 
   for (const email of emails) {
     const found = await Emails.findOne({ email });
 
-    if (!found) {
-      remainedEmails.push({ email });
+    if (found) {
+      verifiedEmails.push({ email: found.email, status: found.status });
+    } else {
+      unverifiedEmails.push({ email });
     }
   }
 
-  const response = await sendRequest({
-    url,
-    method: 'POST',
-    body: {
-      file: remainedEmails,
-    },
-  });
+  let response = {
+    verifiedEmails,
+  };
 
-  return res.send(response);
-});
-
-router.get('/bulk/status', async (req, res, next) => {
-  debugRequest(debugEngages, req);
-
-  const { taskId } = req.query;
-
-  if (taskId) {
-    const url = `https://truemail.io/api/v1/tasks/${taskId}/status?access_token=${apiKey}`;
-
-    const response = await sendRequest({
+  if (unverifiedEmails.length > 0) {
+    const thirdPartyResponse = await sendRequest({
       url,
-      method: 'GET',
+      method: 'POST',
+      body: {
+        file: unverifiedEmails,
+      },
     });
 
-    return res.send(response);
+    response = { ...response, ...thirdPartyResponse };
   }
 
-  return next(new Error('Please send `taskId`'));
-});
+  await sendMessage('engages-api:email-verifier-bulk', response);
+};
 
-router.get('/bulk/download', async (req, res, next) => {
-  debugRequest(debugEngages, req);
+export const checkStatus = async (data: any) => {
+  const { taskId } = data;
+  const url = `https://truemail.io/api/v1/tasks/${taskId}/status?access_token=${apiKey}`;
 
-  const { taskId } = req.query;
+  const response = await sendRequest({
+    url,
+    method: 'GET',
+  });
 
-  if (taskId) {
-    const url = `https://truemail.io/api/v1/tasks/${taskId}/download?access_token=${apiKey}`;
+  await sendMessage('engages-api:email-verifier-status', JSON.parse(response).data);
+};
 
-    const response = await sendRequest({
-      url,
-      method: 'GET',
-    });
+export const download = async (taskId: string) => {
+  const url = `https://truemail.io/api/v1/tasks/${taskId}/download?access_token=${apiKey}&timeout=30000`;
 
-    const rows = response.split('\n');
-    const emails = [];
+  const response = await sendRequest({
+    url,
+    method: 'GET',
+  });
 
-    for (const row of rows) {
-      const rowArray = row.split(',');
+  const rows = response.split('\n');
+  const emails = [];
 
+  for (const row of rows) {
+    const rowArray = row.split(',');
+    if (rowArray.length === 3) {
       const email = rowArray[0];
       const status = rowArray[2];
 
@@ -123,19 +120,21 @@ router.get('/bulk/download', async (req, res, next) => {
         status,
       });
 
-      const doc = {
-        email,
-        status,
-        created: new Date(),
-      };
+      const found = await Emails.findOne({ email });
 
-      await Emails.create(doc);
+      if (!found) {
+        const doc = {
+          email,
+          status,
+          created: new Date(),
+        };
+
+        await Emails.create(doc);
+      }
     }
-
-    return res.send(emails);
   }
 
-  return next(new Error('Please send `taskId`'));
-});
+  await sendMessage('engages-api:email-verifier-download', emails);
+};
 
 export default router;

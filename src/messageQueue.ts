@@ -1,5 +1,6 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
+import { bulk, checkStatus, download } from './api/emailVerifier';
 import { debugBase, debugWorkers } from './debuggers';
 import { start } from './workers';
 
@@ -27,12 +28,60 @@ export const initConsumer = async () => {
         channel.ack(msg);
       }
     });
+
+    await channel.assertQueue('erxes-api:send-engage');
+
+    channel.consume('erxes-api:send-engage', async msg => {
+      if (msg !== null) {
+        const data = JSON.parse(msg.content.toString());
+
+        start(data);
+
+        channel.ack(msg);
+      }
+    });
+
+    await channel.assertQueue('erxes-api:email-verifier-status');
+
+    channel.consume('erxes-api:email-verifier-status', async msg => {
+      if (msg !== null) {
+        const data = JSON.parse(msg.content.toString());
+
+        await checkStatus(data);
+
+        channel.ack(msg);
+      }
+    });
+
+    await channel.assertQueue('erxes-api:email-verifier-bulk');
+
+    channel.consume('erxes-api:email-verifier-bulk', async msg => {
+      if (msg !== null) {
+        const data = JSON.parse(msg.content.toString());
+
+        await bulk(data);
+
+        channel.ack(msg);
+      }
+    });
+
+    await channel.assertQueue('erxes-api:email-verifier-download');
+
+    channel.consume('erxes-api:email-verifier-download', async msg => {
+      if (msg !== null) {
+        const data = JSON.parse(msg.content.toString());
+
+        await download(data);
+
+        channel.ack(msg);
+      }
+    });
   } catch (e) {
     debugWorkers(e.message);
   }
 };
 
-export const sendMessage = async (action: string, data: any) => {
+export const sendMessage = async (queueName: string, data: any) => {
   if (NODE_ENV === 'test') {
     return;
   }
@@ -40,8 +89,8 @@ export const sendMessage = async (action: string, data: any) => {
   debugBase(`Sending data to engagesApi queue`, data);
 
   try {
-    await channel.assertQueue('engages-api:set-donot-disturb');
-    await channel.sendToQueue('engages-api:set-donot-disturb', Buffer.from(JSON.stringify({ action, data })));
+    await channel.assertQueue(queueName);
+    await channel.sendToQueue(queueName, Buffer.from(JSON.stringify(data || {})));
   } catch (e) {
     debugBase(e.message);
   }

@@ -3,7 +3,11 @@ import { Document, Model, model, Schema } from 'mongoose';
 const STATUS = {
   VALID: 'valid',
   INVALID: 'invalid',
-  ALL: ['valid', 'invalid'],
+  ACCEPT_ALL_UNVERIFIABLE: 'accept_all_unverifiable',
+  UNKNOWN: 'unknown',
+  DISPOSABLE: 'disposable',
+  CATCHALL: 'catchall',
+  ALL: ['valid', 'invalid', 'accept_all_unverifiable', 'unknown', 'disposable', 'catchall'],
 };
 
 interface IEmail {

@@ -58,7 +58,10 @@ const handleMessage = async message => {
   const rejected = await DeliveryReports.updateOrCreateReport(mailHeaders, type);
 
   if (rejected === 'reject') {
-    await sendMessage('setDoNotDisturb', { customerId: mail.customerId });
+    await sendMessage('engages-api:set-donot-disturb', {
+      action: 'setDoNotDisturb',
+      data: { customerId: mail.customerId },
+    });
   }
 
   return true;
@@ -108,8 +111,8 @@ export const awsRequests = {
           return reject(error);
         }
 
-        return resolve(data.VerifiedEmailAddresses)
-      })
+        return resolve(data.VerifiedEmailAddresses);
+      });
     });
   },
 
@@ -122,8 +125,8 @@ export const awsRequests = {
           return reject(error);
         }
 
-        return resolve(data)
-      })
+        return resolve(data);
+      });
     });
   },
 
@@ -136,8 +139,8 @@ export const awsRequests = {
           return reject(error);
         }
 
-        return resolve(data)
-      })
+        return resolve(data);
+      });
     });
-  }
+  },
 };
