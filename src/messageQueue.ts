@@ -1,6 +1,6 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
-import { bulk, checkStatus, download } from './api/emailVerifier';
+import { bulk, checkStatus, download, single } from './api/emailVerifier';
 import { debugBase, debugWorkers } from './debuggers';
 import { start } from './workers';
 
@@ -72,6 +72,18 @@ export const initConsumer = async () => {
         const data = JSON.parse(msg.content.toString());
 
         await download(data);
+
+        channel.ack(msg);
+      }
+    });
+
+    await channel.assertQueue('erxes-api:email-verifier-single');
+
+    channel.consume('erxes-api:email-verifier-single', async msg => {
+      if (msg !== null) {
+        const data = JSON.parse(msg.content.toString());
+
+        await single(data);
 
         channel.ack(msg);
       }

@@ -1,6 +1,5 @@
 import * as EmailValidator from 'email-deep-validator';
 import { Router } from 'express';
-import { debugEngages, debugRequest } from '../debuggers';
 import { sendMessage } from '../messageQueue';
 import { Emails } from '../models';
 import { sendRequest } from '../utils';
@@ -8,20 +7,17 @@ import { sendRequest } from '../utils';
 const router = Router();
 const apiKey = 'LUbFcpWbOlqoOFEgHZ6Rw4x8zpFGhzckm1hfJ2rAr1UgzDKxxHq8la3dlkw050RH';
 
-router.post('/single', async (req, res, _next) => {
-  debugRequest(debugEngages, req);
-  const { email } = req.query;
-
+export const single = async ({ email, customerId }: { email: string; customerId: string }) => {
   const emailOnDb = await Emails.findOne({ email });
 
   if (emailOnDb) {
-    return res.send(emailOnDb.status);
+    return sendMessage('engages-api:email-verifier-single', { customerId, status: emailOnDb.status });
   }
 
   const sendResult = async (status: string) => {
     await Emails.create({ email, status });
 
-    return res.send('invalid');
+    return sendMessage('engages-api:email-verifier-single', { customerId, status });
   };
 
   const emailValidator = new EmailValidator();
@@ -49,7 +45,7 @@ router.post('/single', async (req, res, _next) => {
   }
 
   return sendResult('invalid');
-});
+};
 
 export const bulk = async (emails: string[]) => {
   const url = `https://truemail.io/api/v1/tasks/bulk?access_token=${apiKey}`;
