@@ -2,36 +2,38 @@ import * as EmailValidator from 'email-deep-validator';
 import { Router } from 'express';
 import { sendMessage } from '../messageQueue';
 import { Emails } from '../models';
-import { sendRequest } from '../utils';
+import { getEnv, sendRequest } from '../utils';
 
 interface ISingleTrueMail {
   status: string;
-  result: string;
-  format: string;
-  server_status: string;
-  email_id: number;
-  valid_dns_record: number;
-  valid_mx_record: number;
-  reachable_smtp_server: number;
-  fqdn: string;
-  type: string;
+  result?: string;
+  format?: string;
+  server_status?: string;
+  email_id?: number;
+  valid_dns_record?: number;
+  valid_mx_record?: number;
+  reachable_smtp_server?: number;
+  fqdn?: string;
+  type?: string;
 }
 
 interface IBulkTrueMail {
   status: string;
-  task_id: number;
+  task_id?: number;
+  message?: string;
 }
 
 interface IStatusTrueMail {
   status: string;
-  total: number;
-  billable: number;
-  valid: number;
-  invalid: number;
-  catchall: number;
-  disposable: number;
-  unknown: number;
-  duplicates: number;
+  total?: number;
+  billable?: number;
+  valid?: number;
+  invalid?: number;
+  catchall?: number;
+  disposable?: number;
+  unknown?: number;
+  duplicates?: number;
+  message?: string;
 }
 
 interface IDownload {
@@ -40,46 +42,61 @@ interface IDownload {
 }
 
 const router = Router();
-const apiKey = 'LUbFcpWbOlqoOFEgHZ6Rw4x8zpFGhzckm1hfJ2rAr1UgzDKxxHq8la3dlkw050RH';
+const TRUEMAIL_API_KEY = getEnv({
+  name: 'TRUEMAIL_API_KEY',
+  defaultValue: 'LUbFcpWbOlqoOFEgHZ6Rw4x8zpFGhzckm1hfJ2rAr1UgzDKxxHq8la3dlkw050RH',
+});
 
 const singleTrueMail = async (email: string): Promise<ISingleTrueMail> => {
-  const url = `https://truemail.io/api/v1/verify/single?access_token=${apiKey}&email=${email}`;
+  if (TRUEMAIL_API_KEY) {
+    const url = `https://truemail.io/api/v1/verify/single?access_token=${TRUEMAIL_API_KEY}&email=${email}`;
 
-  const response = await sendRequest({
-    url,
-    method: 'GET',
-  });
+    const response = await sendRequest({
+      url,
+      method: 'GET',
+    });
 
-  return JSON.parse(response);
+    return JSON.parse(response);
+  }
+
+  return { status: 'notFound' };
 };
 
 const bulkTrueMail = async (unverifiedEmails: string[]): Promise<IBulkTrueMail> => {
-  const url = `https://truemail.io/api/v1/tasks/bulk?access_token=${apiKey}`;
+  if (TRUEMAIL_API_KEY) {
+    const url = `https://truemail.io/api/v1/tasks/bulk?access_token=${TRUEMAIL_API_KEY}`;
 
-  const response = await sendRequest({
-    url,
-    method: 'POST',
-    body: {
-      file: unverifiedEmails,
-    },
-  });
+    const response = await sendRequest({
+      url,
+      method: 'POST',
+      body: {
+        file: unverifiedEmails,
+      },
+    });
 
-  return JSON.parse(response);
+    return JSON.parse(response);
+  }
+
+  return { status: 'error', message: 'Please configure TRUEMAIL_API_KEY' };
 };
 
 const statusTrueMail = async (taskId: string): Promise<IStatusTrueMail> => {
-  const url = `https://truemail.io/api/v1/tasks/${taskId}/status?access_token=${apiKey}`;
+  if (TRUEMAIL_API_KEY) {
+    const url = `https://truemail.io/api/v1/tasks/${taskId}/status?access_token=${TRUEMAIL_API_KEY}`;
 
-  const response = await sendRequest({
-    url,
-    method: 'GET',
-  });
+    const response = await sendRequest({
+      url,
+      method: 'GET',
+    });
 
-  return JSON.parse(response).data;
+    return JSON.parse(response).data;
+  }
+
+  return { status: 'error', message: 'Please configure TRUEMAIL_API_KEY' };
 };
 
 const downloadTrueMail = async (taskId: string): Promise<IDownload[]> => {
-  const url = `https://truemail.io/api/v1/tasks/${taskId}/download?access_token=${apiKey}&timeout=30000`;
+  const url = `https://truemail.io/api/v1/tasks/${taskId}/download?access_token=${TRUEMAIL_API_KEY}&timeout=30000`;
 
   const response = await sendRequest({
     url,
@@ -120,25 +137,27 @@ const downloadTrueMail = async (taskId: string): Promise<IDownload[]> => {
 export const single = async ({ email, customerId, type }: { email: string; customerId: string; type: string }) => {
   const emailOnDb = await Emails.findOne({ email });
 
-  if (emailOnDb) {
-    return sendMessage('engages-api:email-verifier-single', { customerId, status: emailOnDb.status });
-  }
-
-  const sendResult = async (status: string) => {
-    await Emails.create({ email, status });
+  const sendSingleMessage = async (status: string, create?: boolean) => {
+    if (create) {
+      await Emails.create({ email, status });
+    }
 
     return sendMessage('engages-api:email-verifier-single', { customerId, status });
   };
+
+  if (emailOnDb) {
+    return sendSingleMessage(emailOnDb.status);
+  }
 
   const emailValidator = new EmailValidator();
   const { validDomain, validMailbox } = await emailValidator.verify(email);
 
   if (!validDomain) {
-    return sendResult('invalid');
+    return sendSingleMessage('invalid', true);
   }
 
   if (!validMailbox && validMailbox === null) {
-    return sendResult('invalid');
+    return sendSingleMessage('invalid', true);
   }
 
   let response;
@@ -151,11 +170,17 @@ export const single = async ({ email, customerId, type }: { email: string; custo
     }
   }
 
-  if (response.status === 'success') {
-    return sendResult(response.result);
+  // if there is no email verification service
+  if (response.status === 'notFound') {
+    return sendSingleMessage('invalid');
   }
 
-  return sendResult('invalid');
+  if (response.status === 'success') {
+    return sendSingleMessage(response.result, true);
+  }
+
+  // if status is not success
+  return sendSingleMessage('invalid');
 };
 
 export const bulk = async ({ emails, type }: { emails: string[]; type: string }) => {
@@ -172,7 +197,7 @@ export const bulk = async ({ emails, type }: { emails: string[]; type: string })
     }
   }
 
-  let response = {
+  let response: any = {
     verifiedEmails,
   };
 
@@ -187,9 +212,9 @@ export const bulk = async ({ emails, type }: { emails: string[]; type: string })
       }
     }
 
-    console.log('response: ', response);
-
     response = { ...response, ...thirdPartyResponse };
+  } else {
+    response.status = 'success';
   }
 
   await sendMessage('engages-api:email-verifier-bulk', response);
@@ -211,18 +236,24 @@ export const checkStatus = async (data: any) => {
 
 export const download = async ({ taskId, type }: { taskId: string; type: string }) => {
   let emails: IDownload[] = [];
-
-  console.log('download type: ', type);
+  let status = '';
+  let message = '';
 
   switch (type) {
     case 'truemail': {
-      emails = await downloadTrueMail(taskId);
+      if (TRUEMAIL_API_KEY) {
+        emails = await downloadTrueMail(taskId);
+        status = 'success';
+      } else {
+        status = 'error';
+        message = 'Please configure TRUEMAIL_API_KEY';
+      }
 
       break;
     }
   }
 
-  await sendMessage('engages-api:email-verifier-download', emails);
+  await sendMessage('engages-api:email-verifier-download', { status, emails, message });
 };
 
 export default router;
