@@ -1,8 +1,7 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
-import { bulk, checkStatus, download, single } from './api/emailVerifier';
 import { debugBase, debugWorkers } from './debuggers';
-import { start } from './workers';
+import { recieveMessages } from './utils';
 
 dotenv.config();
 
@@ -11,79 +10,25 @@ const { NODE_ENV, RABBITMQ_HOST = 'amqp://localhost' } = process.env;
 let conn;
 let channel;
 
+export const MSG_QUEUE_ACTIONS = {
+  EMAIL_VERIFY: 'emailVerify',
+  SET_DONOT_DISTURB: 'setDoNotDisturb',
+  BULK: 'bulk',
+  ALL: ['emailVerify', 'setDoNotDisturb', 'bulk'],
+};
+
 export const initConsumer = async () => {
   try {
+    console.log('RABBITMQ_HOST: ', RABBITMQ_HOST);
     conn = await amqplib.connect(RABBITMQ_HOST);
     channel = await conn.createChannel();
 
     // listen for erxes api ===========
-    await channel.assertQueue('erxes-api:send-engage');
+    await channel.assertQueue('erxes-api:engages-notification');
 
-    channel.consume('erxes-api:send-engage', async msg => {
+    channel.consume('erxes-api:engages-notification', async msg => {
       if (msg !== null) {
-        const data = JSON.parse(msg.content.toString());
-
-        start(data);
-
-        channel.ack(msg);
-      }
-    });
-
-    await channel.assertQueue('erxes-api:send-engage');
-
-    channel.consume('erxes-api:send-engage', async msg => {
-      if (msg !== null) {
-        const data = JSON.parse(msg.content.toString());
-
-        start(data);
-
-        channel.ack(msg);
-      }
-    });
-
-    await channel.assertQueue('erxes-api:email-verifier-status');
-
-    channel.consume('erxes-api:email-verifier-status', async msg => {
-      if (msg !== null) {
-        const data = JSON.parse(msg.content.toString());
-
-        await checkStatus(data);
-
-        channel.ack(msg);
-      }
-    });
-
-    await channel.assertQueue('erxes-api:email-verifier-bulk');
-
-    channel.consume('erxes-api:email-verifier-bulk', async msg => {
-      if (msg !== null) {
-        const data = JSON.parse(msg.content.toString());
-
-        await bulk(data);
-
-        channel.ack(msg);
-      }
-    });
-
-    await channel.assertQueue('erxes-api:email-verifier-download');
-
-    channel.consume('erxes-api:email-verifier-download', async msg => {
-      if (msg !== null) {
-        const data = JSON.parse(msg.content.toString());
-
-        await download(data);
-
-        channel.ack(msg);
-      }
-    });
-
-    await channel.assertQueue('erxes-api:email-verifier-single');
-
-    channel.consume('erxes-api:email-verifier-single', async msg => {
-      if (msg !== null) {
-        const data = JSON.parse(msg.content.toString());
-
-        await single(data);
+        recieveMessages(JSON.parse(msg.content.toString()));
 
         channel.ack(msg);
       }
@@ -93,7 +38,12 @@ export const initConsumer = async () => {
   }
 };
 
-export const sendMessage = async (queueName: string, data: any) => {
+interface IQueueData {
+  action: string;
+  data: any;
+}
+
+export const sendMessage = async (queueName: string, data: IQueueData) => {
   if (NODE_ENV === 'test') {
     return;
   }

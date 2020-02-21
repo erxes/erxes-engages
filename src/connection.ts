@@ -7,19 +7,23 @@ dotenv.config();
 
 mongoose.Promise = global.Promise;
 mongoose.set('useFindAndModify', false);
+const MONGO_URL = getEnv({ name: 'MONGO_URL' });
 
-export const connect = () => {
-  const URI = getEnv({ name: 'MONGO_URL' });
-  mongoose.connect(URI, { useNewUrlParser: true, useCreateIndex: true });
+mongoose.connection
+  .on('connected', () => {
+    debugDb(`Connected to the database: ${MONGO_URL}`);
+  })
+  .on('disconnected', () => {
+    debugDb(`Disconnected from the database: ${MONGO_URL}`);
+  })
+  .on('error', error => {
+    debugDb(`Database connection error: ${MONGO_URL}`, error);
+  });
 
-  mongoose.connection
-    .on('connected', () => {
-      debugDb(`Connected to the database: ${URI}`);
-    })
-    .on('disconnected', () => {
-      debugDb(`Disconnected from the database: ${URI}`);
-    })
-    .on('error', error => {
-      debugDb(`Database connection error: ${URI}`, error);
-    });
+export const connect = (URL?: string) => {
+  return mongoose.connect(URL || MONGO_URL, { useNewUrlParser: true, useCreateIndex: true });
 };
+
+export function disconnect() {
+  return mongoose.connection.close();
+}

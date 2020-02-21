@@ -9,7 +9,8 @@
     "build": "tsc -p tsconfig.prod.json",
     "precommit": "lint-staged",
     "release": "release-it",
-    "test": "jest --coverage --forceExit --runInBand"
+    "test": "jest --coverage --forceExit --runInBand",
+    "checkAndGetBulkEmails": "ts-node ./src/commands/checkAndGetBulkEmails.ts"
   },
   "lint-staged": {
     "*.ts": [

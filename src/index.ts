@@ -4,7 +4,6 @@ import * as express from 'express';
 import { filterXSS } from 'xss';
 import configs from './api/configs';
 import deliveryReports from './api/deliveryReports';
-import emailVerifier from './api/emailVerifier';
 
 // load environment variables
 dotenv.config();
@@ -37,7 +36,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Insert routes below
 app.use('/configs', configs);
 app.use('/deliveryReports', deliveryReports);
-app.use('/emailVerifier', emailVerifier);
 
 trackEngages(app);
 

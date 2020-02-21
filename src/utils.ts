@@ -1,9 +1,11 @@
 import * as AWS from 'aws-sdk';
 import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
+import { bulk, single } from './api/emailVerifier';
 import { debugBase, debugExternalRequests } from './debuggers';
 import Configs from './models/Configs';
 import { getApi } from './trackers/engageTracker';
+import { start } from './workers';
 
 export const createTransporter = async () => {
   const config = await Configs.getConfigs();
@@ -199,6 +201,30 @@ export const sendRequest = async (
     } else {
       const message = e.body || e.message;
       throw new Error(message);
+    }
+  }
+};
+
+export const recieveMessages = ({ action, data }) => {
+  console.log('action: ', action);
+  console.log('data: ', data);
+
+  switch (action) {
+    case 'sendEngage': {
+      start(data);
+
+      break;
+    }
+    case 'verifyEmail': {
+      const { emails, email, type } = data;
+
+      if (email) {
+        single({ email, type });
+      } else {
+        bulk({ emails, type });
+      }
+
+      break;
     }
   }
 };

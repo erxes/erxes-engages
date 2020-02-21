@@ -1,6 +1,6 @@
 import * as AWS from 'aws-sdk';
 import { debugBase } from '../debuggers';
-import { sendMessage } from '../messageQueue';
+import { MSG_QUEUE_ACTIONS, sendMessage } from '../messageQueue';
 import { Configs, DeliveryReports, Stats } from '../models';
 
 export const getApi = async (type: string): Promise<any> => {
@@ -58,8 +58,8 @@ const handleMessage = async message => {
   const rejected = await DeliveryReports.updateOrCreateReport(mailHeaders, type);
 
   if (rejected === 'reject') {
-    await sendMessage('engages-api:set-donot-disturb', {
-      action: 'setDoNotDisturb',
+    await sendMessage('engagesNotification', {
+      action: MSG_QUEUE_ACTIONS.SET_DONOT_DISTURB,
       data: { customerId: mail.customerId },
     });
   }
