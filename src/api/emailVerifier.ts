@@ -42,7 +42,7 @@ const bulkTrueMail = async (unverifiedEmails: string[]) => {
     },
   });
 
-  return sendMessage('engagesNotification', { action: MSG_QUEUE_ACTIONS.BULK, data: result });
+  return sendMessage('engagesBulkEmailNotification', { action: MSG_QUEUE_ACTIONS.BULK, data: result });
 };
 
 const sendSingleMessage = async (doc: { email: string; status: string }, create?: boolean) => {

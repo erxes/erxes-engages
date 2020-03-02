@@ -1,5 +1,5 @@
 import { connect, disconnect } from '../connection';
-import { sendMessage } from '../messageQueue';
+import { MSG_QUEUE_ACTIONS, sendMessage } from '../messageQueue';
 import { Emails } from '../models';
 import { getEnv, sendRequest } from '../utils';
 
@@ -48,7 +48,7 @@ const getTrueMailBulk = async (taskId: string) => {
         }
       }
 
-      sendMessage('engagesNotification', { action: 'emailVerifier', data: emails });
+      sendMessage('engagesNotification', { action: MSG_QUEUE_ACTIONS.EMAIL_VERIFY, data: emails });
     })
     .then(() => {
       disconnect();

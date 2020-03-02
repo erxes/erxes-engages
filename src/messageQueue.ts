@@ -19,7 +19,6 @@ export const MSG_QUEUE_ACTIONS = {
 
 export const initConsumer = async () => {
   try {
-    console.log('RABBITMQ_HOST: ', RABBITMQ_HOST);
     conn = await amqplib.connect(RABBITMQ_HOST);
     channel = await conn.createChannel();
 

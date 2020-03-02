@@ -206,9 +206,6 @@ export const sendRequest = async (
 };
 
 export const recieveMessages = ({ action, data }) => {
-  console.log('action: ', action);
-  console.log('data: ', data);
-
   switch (action) {
     case 'sendEngage': {
       start(data);
