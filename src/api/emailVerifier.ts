@@ -30,8 +30,6 @@ const singleTrueMail = async (email: string) => {
 const bulkTrueMail = async (unverifiedEmails: string[]) => {
   const trueMailApiKey = await getConfig('trueMailApiKey');
 
-  console.log('trueMailApiKey: ', trueMailApiKey);
-
   const url = `https://truemail.io/api/v1/tasks/bulk?access_token=${trueMailApiKey}`;
 
   try {
@@ -100,9 +98,6 @@ export const bulk = async (emails: string[]) => {
       unverifiedEmails.push({ email });
     }
   }
-
-  console.log('verifiedEmails: ', verifiedEmails);
-  console.log('unverifiedEmails: ', unverifiedEmails);
 
   if (verifiedEmails.length > 0) {
     sendMessage('engagesNotification', { action: MSG_QUEUE_ACTIONS.EMAIL_VERIFY, data: verifiedEmails });
