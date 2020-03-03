@@ -3,7 +3,7 @@ import { configFactory } from './factories';
 import './setup';
 
 test('updateConfig', async done => {
-  await Configs.updateConfig({
+  await Configs.updateConfigs({
     accessKeyId: 'accessKeyId',
     secretAccessKey: 'secretAccessKey',
     region: 'region',
@@ -38,7 +38,7 @@ test('getConfigs', async done => {
     code: 'region',
   });
 
-  let configs = await Configs.getConfigs();
+  let configs = await Configs.getSESConfigs();
 
   expect(configs.secretAccessKey).toBe(secretAccessKey.value);
   expect(configs.accessKeyId).toBe(accessKeyId.value);
@@ -46,7 +46,7 @@ test('getConfigs', async done => {
 
   await Configs.deleteMany({});
 
-  configs = await Configs.getConfigs();
+  configs = await Configs.getSESConfigs();
 
   expect(configs.secretAccessKey).toBe('');
   expect(configs.accessKeyId).toBe('');

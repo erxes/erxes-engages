@@ -2,35 +2,28 @@ import { Router } from 'express';
 import { debugEngages, debugRequest } from '../debuggers';
 import { Configs } from '../models';
 import { awsRequests } from '../trackers/engageTracker';
-import { createTransporter, subscribeEngage } from '../utils';
+import { createTransporter, updateConfigs } from '../utils';
 
 const router = Router();
 
 router.post('/save', async (req, res, next) => {
   debugRequest(debugEngages, req);
 
-  let config = {};
+  const { configsMap } = req.body;
 
   try {
-    config = await Configs.updateConfig(req.body);
-    await subscribeEngage();
+    await updateConfigs(configsMap);
   } catch (e) {
     return next(new Error(e));
   }
 
-  return res.json(config);
+  return res.json({ status: 'ok' });
 });
 
-router.get('/detail', async (req, res, next) => {
+router.get('/detail', async (req, res) => {
   debugRequest(debugEngages, req);
 
-  let configs = {};
-
-  try {
-    configs = await Configs.getConfigs();
-  } catch (e) {
-    return next(new Error(e));
-  }
+  const configs = await Configs.find({});
 
   return res.json(configs);
 });

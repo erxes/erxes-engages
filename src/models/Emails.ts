@@ -1,6 +1,6 @@
 import { Document, Model, model, Schema } from 'mongoose';
 
-const STATUS = {
+export const EMAIL_VALIDATION_STATUSES = {
   VALID: 'valid',
   INVALID: 'invalid',
   ACCEPT_ALL_UNVERIFIABLE: 'accept_all_unverifiable',
@@ -22,7 +22,7 @@ interface IEmailDocument extends IEmail, Document {
 
 const emailSchema = new Schema({
   email: { type: String, unique: true },
-  status: { type: String, enum: STATUS.ALL },
+  status: { type: String, enum: EMAIL_VALIDATION_STATUSES.ALL },
   created: Date,
 });
 

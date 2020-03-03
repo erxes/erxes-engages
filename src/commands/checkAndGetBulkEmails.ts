@@ -1,98 +1,126 @@
+import * as amqplib from 'amqplib';
 import { connect, disconnect } from '../connection';
-import { MSG_QUEUE_ACTIONS, sendMessage } from '../messageQueue';
+import { MSG_QUEUE_ACTIONS } from '../messageQueue';
 import { Emails } from '../models';
-import { getEnv, sendRequest } from '../utils';
+import { initRedis } from '../redisClient';
+import { getConfig, sendRequest } from '../utils';
 
-console.log(
-  'Instruction: yarn checkAndGetBulkEmails taskId emailVerifierType. emailVerifierType`s default value is `truemail`',
-);
+initRedis();
 
-const TRUEMAIL_API_KEY = getEnv({ name: 'TRUEMAIL_API_KEY' });
+console.log('Instruction: yarn checkAndGetBulkEmails taskId');
 
-const getTrueMailBulk = async (taskId: string) => {
-  connect()
-    .then(async () => {
-      const url = `https://truemail.io/api/v1/tasks/${taskId}/download?access_token=${TRUEMAIL_API_KEY}&timeout=30000`;
+connect().then(async () => {
+  const getTrueMailBulk = async (taskId: string) => {
+    const { RABBITMQ_HOST = 'amqp://localhost' } = process.env;
 
-      const response = await sendRequest({
-        url,
-        method: 'GET',
-      });
+    const connection = await amqplib.connect(RABBITMQ_HOST);
+    const channel = await connection.createChannel();
 
-      const rows = response.split('\n');
-      const emails: Array<{ email: string; status: string }> = [];
+    const trueMailApiKey = await getConfig('trueMailApiKey');
 
-      for (const row of rows) {
-        const rowArray = row.split(',');
+    const url = `https://truemail.io/api/v1/tasks/${taskId}/download?access_token=${trueMailApiKey}&timeout=30000`;
 
-        if (rowArray.length > 2) {
-          const email = rowArray[0];
-          const status = rowArray[2];
+    const response = await sendRequest({
+      url,
+      method: 'GET',
+    });
 
-          emails.push({
+    const rows = response.split('\n');
+    const emails: Array<{ email: string; status: string }> = [];
+
+    for (const row of rows) {
+      const rowArray = row.split(',');
+
+      if (rowArray.length > 2) {
+        const email = rowArray[0];
+        const status = rowArray[2];
+
+        emails.push({
+          email,
+          status,
+        });
+
+        const found = await Emails.findOne({ email });
+
+        if (!found) {
+          const doc = {
             email,
             status,
-          });
+            created: new Date(),
+          };
 
-          const found = await Emails.findOne({ email });
-
-          if (!found) {
-            const doc = {
-              email,
-              status,
-              created: new Date(),
-            };
-
-            await Emails.create(doc);
-          }
+          await Emails.create(doc);
         }
       }
+    }
 
-      sendMessage('engagesNotification', { action: MSG_QUEUE_ACTIONS.EMAIL_VERIFY, data: emails });
-    })
-    .then(() => {
+    const args = { action: MSG_QUEUE_ACTIONS.EMAIL_VERIFY, data: emails };
+
+    await channel.assertQueue('engagesNotification');
+    await channel.sendToQueue('engagesNotification', Buffer.from(JSON.stringify(args)));
+
+    console.log('Successfully get the following emails : \n', emails);
+
+    setTimeout(() => {
+      channel.connection.close();
+
       disconnect();
-
       process.exit();
-    });
-};
+    }, 500);
+  };
 
-const check = async () => {
-  const argv = process.argv;
+  const check = async () => {
+    const argv = process.argv;
 
-  if (argv.length < 3) {
-    throw new Error('Please put taskId after yarn checkAndGetBulkEmails');
-  }
+    if (argv.length < 3) {
+      console.log('Please put taskId after yarn checkAndGetBulkEmails');
 
-  const taskId = argv[2];
-  const type = argv.length === 4 ? argv[3] : 'truemail';
+      disconnect();
+      process.exit();
+    }
 
-  let output;
+    const taskId = argv[2];
+    const type = await getConfig('emailVerificationType');
 
-  switch (type) {
-    case 'truemail': {
-      if (!TRUEMAIL_API_KEY) {
-        throw new Error('Please configure TRUEMAIL_API_KEY');
-      }
+    if (!type) {
+      console.log('Please configure EMAIL VERIFICATION TYPE');
 
-      const url = `https://truemail.io/api/v1/tasks/${taskId}/status?access_token=${TRUEMAIL_API_KEY}`;
+      disconnect();
+      process.exit();
+    }
 
-      const response = await sendRequest({
-        url,
-        method: 'GET',
-      });
+    switch (type) {
+      case 'truemail': {
+        const trueMailApiKey = await getConfig('trueMailApiKey');
 
-      output = JSON.parse(response).data;
+        if (!trueMailApiKey) {
+          console.log('Please configure TRUEMAIL API KEY');
 
-      if (output.status === 'finished') {
-        await getTrueMailBulk(taskId);
-      } else {
-        process.exit();
+          disconnect();
+          process.exit();
+        }
+
+        const url = `https://truemail.io/api/v1/tasks/${taskId}/status?access_token=${trueMailApiKey}`;
+
+        const response = await sendRequest({
+          url,
+          method: 'GET',
+        });
+
+        const data = JSON.parse(response).data;
+        console.log(data);
+
+        if (data.status === 'finished') {
+          await getTrueMailBulk(taskId);
+        } else {
+          disconnect();
+          process.exit();
+        }
+
+        break;
       }
     }
-  }
+  };
 
-  console.log(output);
-};
-
-check();
+  check();
+});

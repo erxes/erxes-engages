@@ -1,11 +1,19 @@
 import { Document, Model, model, Schema } from 'mongoose';
+import { getValueAsString } from '../utils';
 
 export interface IConfig {
   code: string;
   value: string;
 }
 
-export interface IConfigDocument extends IConfig, Document {}
+export interface ISESConfig {
+  accessKeyId: string;
+  region: string;
+  secretAccessKey: string;
+}
+export interface IConfigDocument extends IConfig, Document {
+  _id: string;
+}
 
 export const configsSchema = new Schema({
   code: { type: String },
@@ -13,34 +21,72 @@ export const configsSchema = new Schema({
 });
 
 export interface IConfigModel extends Model<IConfigDocument> {
-  updateConfig(doc: { accessKeyId: string; secretAccessKey: string; region: string }): Promise<IConfigDocument>;
-  getConfigs(): Promise<{ accessKeyId: string; secretAccessKey: string; region: string }>;
+  getConfig(code: string): Promise<IConfigDocument>;
+  updateConfigs(configsMap): Promise<void>;
+  createOrUpdateConfig({ code, value }: IConfig): IConfigDocument;
+  getSESConfigs(): Promise<ISESConfig>;
 }
 
 export const loadClass = () => {
   class Config {
-    /**
-     * Updates config
+    /*
+     * Get a Config
      */
-    public static async updateConfig(doc: { accessKeyId: string; secretAccessKey: string; region: string }) {
-      const options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    public static async getConfig(code: string) {
+      const config = await Configs.findOne({ code });
 
-      await Configs.updateOne({ code: 'accessKeyId' }, { $set: { value: doc.accessKeyId } }, options);
-      await Configs.updateOne({ code: 'secretAccessKey' }, { $set: { value: doc.secretAccessKey } }, options);
-      await Configs.updateOne({ code: 'region' }, { $set: { value: doc.region } }, options);
+      if (!config) {
+        return { value: '' };
+      }
 
-      return this.getConfigs();
+      return config;
     }
 
-    public static async getConfigs() {
-      const accessKeyId = await Configs.findOne({ code: 'accessKeyId' });
-      const secretAccessKey = await Configs.findOne({ code: 'secretAccessKey' });
-      const region = await Configs.findOne({ code: 'region' });
+    /**
+     * Create or update config
+     */
+    public static async createOrUpdateConfig({ code, value }: { code: string; value: string[] }) {
+      const obj = await Configs.findOne({ code });
+
+      if (obj) {
+        await Configs.updateOne({ _id: obj._id }, { $set: { value } });
+
+        return Configs.findOne({ _id: obj._id });
+      }
+
+      return Configs.create({ code, value });
+    }
+
+    /**
+     * Update configs
+     */
+    public static async updateConfigs(configsMap) {
+      const codes = Object.keys(configsMap);
+
+      for (const code of codes) {
+        if (!code) {
+          continue;
+        }
+
+        const value = configsMap[code];
+        const doc = { code, value };
+
+        await Configs.createOrUpdateConfig(doc);
+      }
+    }
+
+    /*
+     * Get a Config
+     */
+    public static async getSESConfigs() {
+      const accessKeyId = await getValueAsString('accessKeyId');
+      const secretAccessKey = await getValueAsString('secretAccessKey');
+      const region = await getValueAsString('region');
 
       return {
-        accessKeyId: accessKeyId ? accessKeyId.value : '',
-        region: region ? region.value : '',
-        secretAccessKey: secretAccessKey ? secretAccessKey.value : '',
+        accessKeyId,
+        secretAccessKey,
+        region,
       };
     }
   }

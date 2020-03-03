@@ -10,7 +10,8 @@
     "precommit": "lint-staged",
     "release": "release-it",
     "test": "jest --coverage --forceExit --runInBand",
-    "checkAndGetBulkEmails": "ts-node ./src/commands/checkAndGetBulkEmails.ts"
+    "checkAndGetBulkEmails": "ts-node ./src/commands/checkAndGetBulkEmails.ts",
+    "lint": "tslint 'src/**/*.ts'"
   },
   "lint-staged": {
     "*.ts": [
@@ -29,6 +30,7 @@
     "meteor-random": "^0.0.3",
     "mongoose": "5.7.5",
     "nodemailer": "^6.2.1",
+    "redis": "^2.8.0",
     "requestify": "^0.2.5",
     "xss": "^1.0.6"
   },
