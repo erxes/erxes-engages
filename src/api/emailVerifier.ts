@@ -6,7 +6,7 @@ import { getConfig, sendRequest } from '../utils';
 
 const sendSingleMessage = async (doc: { email: string; status: string }, create?: boolean) => {
   if (create) {
-    await Emails.create(doc);
+    await Emails.createEmail(doc);
   }
 
   return sendMessage('engagesNotification', { action: MSG_QUEUE_ACTIONS.EMAIL_VERIFY, data: [doc] });
@@ -18,10 +18,12 @@ const singleTrueMail = async (email: string) => {
 
     const url = `https://truemail.io/api/v1/verify/single?access_token=${trueMailApiKey}&email=${email}`;
 
-    return sendRequest({
+    const response = await sendRequest({
       url,
       method: 'GET',
     });
+
+    return JSON.parse(response);
   } catch (e) {
     return { status: 'failure' };
   }

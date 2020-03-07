@@ -13,7 +13,6 @@ export const EMAIL_VALIDATION_STATUSES = {
 interface IEmail {
   email: string;
   status: string;
-  created: Date;
 }
 
 interface IEmailDocument extends IEmail, Document {
@@ -23,7 +22,7 @@ interface IEmailDocument extends IEmail, Document {
 const emailSchema = new Schema({
   email: { type: String, unique: true },
   status: { type: String, enum: EMAIL_VALIDATION_STATUSES.ALL },
-  created: Date,
+  created: { type: Date, default: Date.now() },
 });
 
 interface IEmailModel extends Model<IEmailDocument> {
