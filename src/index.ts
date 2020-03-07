@@ -1,9 +1,12 @@
 import * as bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
 import * as express from 'express';
-import { filterXSS } from 'xss'
+import { filterXSS } from 'xss';
 import configs from './api/configs';
 import deliveryReports from './api/deliveryReports';
+import { initRedis } from './redisClient';
+
+initRedis();
 
 // load environment variables
 dotenv.config();

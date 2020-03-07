@@ -1,7 +1,7 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
 import { debugBase, debugWorkers } from './debuggers';
-import { start } from './workers';
+import { recieveMessages } from './utils';
 
 dotenv.config();
 
@@ -10,19 +10,24 @@ const { NODE_ENV, RABBITMQ_HOST = 'amqp://localhost' } = process.env;
 let conn;
 let channel;
 
+export const MSG_QUEUE_ACTIONS = {
+  EMAIL_VERIFY: 'emailVerify',
+  SET_DONOT_DISTURB: 'setDoNotDisturb',
+  BULK: 'bulk',
+  ALL: ['emailVerify', 'setDoNotDisturb', 'bulk'],
+};
+
 export const initConsumer = async () => {
   try {
     conn = await amqplib.connect(RABBITMQ_HOST);
     channel = await conn.createChannel();
 
     // listen for erxes api ===========
-    await channel.assertQueue('erxes-api:send-engage');
+    await channel.assertQueue('erxes-api:engages-notification');
 
-    channel.consume('erxes-api:send-engage', async msg => {
+    channel.consume('erxes-api:engages-notification', async msg => {
       if (msg !== null) {
-        const data = JSON.parse(msg.content.toString());
-
-        start(data);
+        recieveMessages(JSON.parse(msg.content.toString()));
 
         channel.ack(msg);
       }
@@ -32,7 +37,12 @@ export const initConsumer = async () => {
   }
 };
 
-export const sendMessage = async (action: string, data: any) => {
+interface IQueueData {
+  action: string;
+  data: any;
+}
+
+export const sendMessage = async (queueName: string, data: IQueueData) => {
   if (NODE_ENV === 'test') {
     return;
   }
@@ -40,8 +50,8 @@ export const sendMessage = async (action: string, data: any) => {
   debugBase(`Sending data to engagesApi queue`, data);
 
   try {
-    await channel.assertQueue('engages-api:set-donot-disturb');
-    await channel.sendToQueue('engages-api:set-donot-disturb', Buffer.from(JSON.stringify({ action, data })));
+    await channel.assertQueue(queueName);
+    await channel.sendToQueue(queueName, Buffer.from(JSON.stringify(data || {})));
   } catch (e) {
     debugBase(e.message);
   }

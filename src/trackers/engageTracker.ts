@@ -1,20 +1,17 @@
 import * as AWS from 'aws-sdk';
 import { debugBase } from '../debuggers';
-import { sendMessage } from '../messageQueue';
+import { MSG_QUEUE_ACTIONS, sendMessage } from '../messageQueue';
 import { Configs, DeliveryReports, Stats } from '../models';
+import { ISESConfig } from '../models/Configs';
 
 export const getApi = async (type: string): Promise<any> => {
-  const config = await Configs.getConfigs();
+  const config: ISESConfig = await Configs.getSESConfigs();
 
   if (!config) {
     return;
   }
 
-  AWS.config.update({
-    region: config.region,
-    accessKeyId: config.accessKeyId,
-    secretAccessKey: config.secretAccessKey,
-  });
+  AWS.config.update(config);
 
   if (type === 'ses') {
     return new AWS.SES();
@@ -58,7 +55,10 @@ const handleMessage = async message => {
   const rejected = await DeliveryReports.updateOrCreateReport(mailHeaders, type);
 
   if (rejected === 'reject') {
-    await sendMessage('setDoNotDisturb', { customerId: mail.customerId });
+    await sendMessage('engagesNotification', {
+      action: MSG_QUEUE_ACTIONS.SET_DONOT_DISTURB,
+      data: { customerId: mail.customerId },
+    });
   }
 
   return true;
@@ -108,8 +108,8 @@ export const awsRequests = {
           return reject(error);
         }
 
-        return resolve(data.VerifiedEmailAddresses)
-      })
+        return resolve(data.VerifiedEmailAddresses);
+      });
     });
   },
 
@@ -122,8 +122,8 @@ export const awsRequests = {
           return reject(error);
         }
 
-        return resolve(data)
-      })
+        return resolve(data);
+      });
     });
   },
 
@@ -136,8 +136,8 @@ export const awsRequests = {
           return reject(error);
         }
 
-        return resolve(data)
-      })
+        return resolve(data);
+      });
     });
-  }
+  },
 };

@@ -9,7 +9,9 @@
     "build": "tsc -p tsconfig.prod.json",
     "precommit": "lint-staged",
     "release": "release-it",
-    "test": "jest --coverage --forceExit --runInBand"
+    "test": "jest --coverage --forceExit --runInBand",
+    "checkAndGetBulkEmails": "ts-node ./src/commands/checkAndGetBulkEmails.ts",
+    "lint": "tslint 'src/**/*.ts'"
   },
   "lint-staged": {
     "*.ts": [
@@ -23,10 +25,13 @@
     "body-parser": "^1.17.1",
     "debug": "^4.1.1",
     "dotenv": "^4.0.0",
+    "email-deep-validator": "^3.3.0",
     "express": "^4.16.4",
     "meteor-random": "^0.0.3",
     "mongoose": "5.7.5",
     "nodemailer": "^6.2.1",
+    "redis": "^2.8.0",
+    "requestify": "^0.2.5",
     "xss": "^1.0.6"
   },
   "peerOptionalDependencies": {
