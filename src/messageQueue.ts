@@ -1,6 +1,6 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
-import { debugBase, debugWorkers } from './debuggers';
+import { debugBase } from './debuggers';
 import { recieveMessages } from './utils';
 
 dotenv.config();
@@ -27,13 +27,17 @@ export const initConsumer = async () => {
 
     channel.consume('erxes-api:engages-notification', async msg => {
       if (msg !== null) {
-        recieveMessages(JSON.parse(msg.content.toString()));
+        const data = JSON.parse(msg.content.toString());
+
+        debugBase(`Receiving queue data from erxes-api`, data);
+
+        recieveMessages(data);
 
         channel.ack(msg);
       }
     });
   } catch (e) {
-    debugWorkers(e.message);
+    debugBase(e.message);
   }
 };
 
