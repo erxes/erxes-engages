@@ -59,11 +59,7 @@ export const single = async (email: string) => {
   const emailValidator = new EmailValidator();
   const { validDomain, validMailbox } = await emailValidator.verify(email);
 
-  if (!validDomain) {
-    return sendSingleMessage({ email, status: EMAIL_VALIDATION_STATUSES.INVALID }, true);
-  }
-
-  if (!validMailbox && validMailbox === null) {
+  if (!validDomain || !validMailbox) {
     return sendSingleMessage({ email, status: EMAIL_VALIDATION_STATUSES.INVALID }, true);
   }
 

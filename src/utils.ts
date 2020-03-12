@@ -209,7 +209,7 @@ export const recieveMessages = ({ action, data }) => {
 
       break;
     }
-    case 'verifyEmail': {
+    case 'emailVerify': {
       const { emails, email } = data;
 
       if (email) {
